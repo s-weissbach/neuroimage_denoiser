@@ -1,62 +1,83 @@
-from utils.trainfiles import trainfiles
+from utils.trainfiles import TrainFiles
 import numpy as np
 import tifffile
 import torch
 
 
-class dataloader:
+class DataLoader:
     def __init__(
         self,
-        t_files: trainfiles,
+        t_files: TrainFiles,
         batch_size: int,
-        sequence_len: int,
+        n_pre: int,
+        n_post: int,
         train_height: int,
         train_width: int,
         load_multiple_targets_per_file: bool = False,
         n_multiple_targets: int = 5,
-        max_intensity: int = 65535,
     ):
+        """
+        Initialize the DataLoader.
+
+        Parameters:
+        - t_files: TrainFiles object containing file information.
+        - batch_size: Number of samples in each batch.
+        - n_pre: Number of frames before the target frame.
+        - n_post: Number of frames after the target frame.
+        - train_height: Height to which images will be cropped or padded.
+        - train_width: Width to which images will be cropped or padded.
+        - load_multiple_targets_per_file: Whether to load multiple targets from a file.
+        - n_multiple_targets: Number of targets to load per file.
+        - max_intensity: Maximum intensity value in the images.
+        """
         if load_multiple_targets_per_file and n_multiple_targets > batch_size:
             raise ValueError(
-                f"n_multiple_targets ({n_multiple_targets}) must be smaller or equal to epoch_size ({batch_size})."
+                f"Invalid configuration: n_multiple_targets ({n_multiple_targets}) must be smaller or equal to batch_size ({batch_size})."
             )
         elif load_multiple_targets_per_file and batch_size % n_multiple_targets != 0:
             raise ValueError(
-                f"epoch_size ({batch_size}) must be divisible by n_multiple_targets ({n_multiple_targets})."
+                f"Invalid configuration: batch_size ({batch_size}) must be divisible by n_multiple_targets ({n_multiple_targets})."
             )
         np.random.seed(42)
         self.file_dict = t_files.file_dict
         self.batch_size = batch_size
-        self.sequence_len = sequence_len
+        self.n_pre = n_pre
+        self.n_post = n_post
         self.train_height = train_height
         self.train_width = train_width
         self.load_multiple_targets_per_file = load_multiple_targets_per_file
-        self.max_intenstiy = max_intensity
         self.epoch_done = False
         if self.load_multiple_targets_per_file:
             self.n_multiple_targets = n_multiple_targets
         else:
             self.n_multiple_targets = 1
         self.train_examples = []
-
+        self.norm_vals = {}
         for iglu_movie in self.file_dict.keys():
             path = self.file_dict[iglu_movie]["filepath"]
             movie_len = self.file_dict[iglu_movie]["shape"][0]
             if self.load_multiple_targets_per_file:
-                iterate_to = movie_len - sequence_len - 1 - n_multiple_targets
+                iterate_to = movie_len - self.n_post - 1 - n_multiple_targets
                 iterate_step = self.n_multiple_targets
             else:
-                iterate_to = movie_len - sequence_len - 1
+                iterate_to = movie_len - self.n_post - 1
                 iterate_step = 1
             self.train_examples += [
                 [path, target]
-                for target in range(sequence_len + 1, iterate_to, iterate_step)
+                for target in range(self.n_pre + 1, iterate_to, iterate_step)
             ]
+            self.norm_vals[path] = {
+                "mean": self.file_dict[iglu_movie]["mean"],
+                "std": self.file_dict[iglu_movie]["std"],
+            }
         self.shuffle_array()
         self.X_list = []
         self.y_list = []
 
     def shuffle_array(self) -> None:
+        """
+        Shuffle the training examples for a new epoch.
+        """
         self.epoch_done = False
         random_order = np.arange(len(self.train_examples))
         np.random.shuffle(random_order)
@@ -65,6 +86,9 @@ class dataloader:
         ]
 
     def crop_pad_img(self, img: np.ndarray) -> np.ndarray:
+        """
+        Shuffle the training examples for a new epoch.
+        """
         _, height, width = img.shape
         diff_height = self.train_height - height
         diff_width = self.train_width - width
@@ -104,34 +128,65 @@ class dataloader:
             )
         return img
 
-    def scale_img(self, img: np.ndarray) -> np.ndarray:
-        return np.divide(img, self.max_intenstiy)
+    def scale_img(self, img: np.ndarray, mean: float, std: float) -> np.ndarray:
+        """
+        Z-scaling for the image. z = (x-µ)/σ
 
-    def create_train_example(self, filepath: str, target: int) -> None:
+        Parameters:
+        - img: Input image.
+        - mean: Mean value for scaling.
+        - std: Standard deviation for scaling.
+
+        Returns:
+        - z-scaled image.
+        """
+        return np.divide(np.subtract(img, mean), std)
+
+    def create_train_example(
+        self, filepath: str, target: int, mean: float, std: float
+    ) -> None:
+        """
+        Create a training example using the specified file, target, mean, and std.
+
+        Parameters:
+        - filepath: Filepath of the image.
+        - target: Target frame index.
+        - mean: Mean value for scaling.
+        - std: Standard deviation for scaling.
+        """
         img = tifffile.imread(filepath)
         img = self.crop_pad_img(img)
         for i in range(self.n_multiple_targets):
             target_ = target + i
+            # Extract frames, scale, and copy middle frame to y and delete
             X_tmp = self.scale_img(
-                np.append(
-                    img[target_ - self.sequence_len - 1 : target_ - 1],
-                    img[target_ + 1 : self.sequence_len + 1],
-                    axis=0,
-                )
+                img[target_ - self.n_pre - 1 : target_ + self.n_post], mean, std
             )
-            y_tmp = self.scale_img(img[target_].reshape(1, img.shape[1], img.shape[2]))
+            y_tmp = (
+                X_tmp[self.n_pre].copy().reshape(1, self.train_height, self.train_width)
+            )
+            X_tmp = np.delete(X_tmp, self.n_pre, axis=0)
             self.X_list.append(X_tmp)
             self.y_list.append(y_tmp)
 
     def get_batch(self) -> bool:
+        """
+        Get a batch of training examples.
+
+        Returns:
+        - True if a batch is successfully created, False if the epoch is done.
+        """
         self.X_list = []
         self.y_list = []
         for _ in range(self.batch_size // self.n_multiple_targets):
             if len(self.available_train_examples) == 0:
+                # Check if available_train_examples is empty, indicating the end of the epoch
                 self.epoch_done = True
                 return False
             filepath, target = self.available_train_examples.pop(0)
-            self.create_train_example(filepath, target)
+            mean = self.norm_vals[filepath]["mean"]
+            std = self.norm_vals[filepath]["std"]
+            self.create_train_example(filepath, target, mean, std)
         self.X = torch.tensor(np.array(self.X_list), dtype=torch.float)
         del self.X_list
         self.y = torch.tensor(np.array(self.y_list), dtype=torch.float)

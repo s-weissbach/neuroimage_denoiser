@@ -1,9 +1,10 @@
 import os
 import tifffile
 import json
+import numpy as np
 
 
-class trainfiles:
+class TrainFiles:
     def __init__(self, train_json_path: str, overwrite: bool = False) -> None:
         self.train_json_path = train_json_path
         self.overwrite = overwrite
@@ -31,7 +32,14 @@ class trainfiles:
                     continue
                 filepath = os.path.join(root, file)
                 tmp_file = tifffile.imread(filepath)
-                self.file_dict[idx] = {"filepath": filepath, "shape": tmp_file.shape}
+                mean = np.mean(tmp_file)
+                std = np.std(tmp_file)
+                self.file_dict[idx] = {
+                    "filepath": filepath,
+                    "shape": tmp_file.shape,
+                    "mean": mean,
+                    "std": std,
+                }
                 idx += 1
         if self.overwrite:
             self.write_json()
