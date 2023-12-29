@@ -5,6 +5,7 @@ import torch.nn.functional as F
 
 class UnetConvBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int) -> None:
+        super().__init__()
         self.conv_block = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
@@ -39,7 +40,6 @@ class Up(nn.Module):
 
     def forward(self, input, input_skip):
         x1 = self.up(input)
-
         # in case padding is needed
         diff_y = input_skip.size()[2] - x1.size()[2]
         diff_x = input_skip.size()[3] - x1.size()[3]
@@ -47,5 +47,5 @@ class Up(nn.Module):
             x1, (diff_x // 2, diff_x - diff_x // 2, diff_y // 2, diff_y - diff_y // 2)
         )
 
-        x = torch.cat([input_skip, x1])
+        x = torch.cat([input_skip, x1], dim=1)
         return self.conv(x)

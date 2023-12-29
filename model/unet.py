@@ -1,5 +1,4 @@
-import modelparts
-import torch
+import model.modelparts as modelparts
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -30,5 +29,5 @@ class UNet(nn.Module):
         x = self.up2(x, x3)
         x = self.up3(x, x2)
         x = self.up4(x, x1)
-        output = nn.ReLU(self.out_block(x))
+        output = self.out_block(x)
         return output
