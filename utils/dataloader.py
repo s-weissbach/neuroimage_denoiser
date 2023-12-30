@@ -2,6 +2,7 @@ from utils.trainfiles import TrainFiles
 import numpy as np
 import tifffile
 import torch
+import utils.normalization as normalization
 
 
 class DataLoader:
@@ -128,20 +129,6 @@ class DataLoader:
             )
         return img
 
-    def scale_img(self, img: np.ndarray, mean: float, std: float) -> np.ndarray:
-        """
-        Z-scaling for the image. z = (x-µ)/σ
-
-        Parameters:
-        - img: Input image.
-        - mean: Mean value for scaling.
-        - std: Standard deviation for scaling.
-
-        Returns:
-        - z-scaled image.
-        """
-        return np.divide(np.subtract(img, mean), std)
-
     def create_train_example(
         self, filepath: str, target: int, mean: float, std: float
     ) -> None:
@@ -159,7 +146,7 @@ class DataLoader:
         for i in range(self.n_multiple_targets):
             target_ = target + i
             # Extract frames, scale, and copy middle frame to y and delete
-            X_tmp = self.scale_img(
+            X_tmp = normalization.z_norm(
                 img[target_ - self.n_pre - 1 : target_ + self.n_post], mean, std
             )
             y_tmp = (
