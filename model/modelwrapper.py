@@ -24,6 +24,7 @@ class ModelWrapper:
 
     def load_weights(self, weights: str) -> None:
         self.model.load_state_dict(torch.load(weights))
+        self.model.eval()
 
     def load_img(self, img_path: str) -> None:
         self.img = tifffile.imread(img_path)
