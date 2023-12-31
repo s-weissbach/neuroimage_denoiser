@@ -2,6 +2,7 @@ import os
 import tifffile
 import yaml
 import numpy as np
+from tqdm import tqdm
 import utils.normalization as normalization
 from utils.activitymap import get_frames_position
 
@@ -34,30 +35,30 @@ class TrainFiles:
         window_size: int = 50,
     ):
         self.file_dict = {}
-        idx = 0
+        files_to_do = []
         for root, _, files in os.walk(directory):
             for file in files:
                 if not any([file.endswith(ending) for ending in fileendings]):
                     continue
-                filepath = os.path.join(root, file)
-                tmp_file = tifffile.imread(filepath)
-                mean = np.mean(tmp_file)
-                std = np.std(tmp_file)
-                # find train examples with activity
-                tmp_file = normalization.rolling_window_z_norm(tmp_file, window_size)
-                # will go through all frames and extract events that within a meaned kernel exceed the
-                # min_z_score threshold
-                # returns a list of events in the form [frame, y-coord, x-coord]
-                frames_and_positions = get_frames_position(
-                    tmp_file, min_z_score, kernel_size
-                )
-                self.file_dict[idx] = {
-                    "filepath": filepath,
-                    "shape": tmp_file.shape,
-                    "mean": mean,
-                    "std": std,
-                    "frames_and_positions": frames_and_positions,
-                }
-                idx += 1
+                files_to_do.append(os.path.join(root, file))
+        for idx, filepath in tqdm(enumerate(files_to_do), total=len(files_to_do)):
+            tmp_file = tifffile.imread(filepath)
+            mean = np.mean(tmp_file)
+            std = np.std(tmp_file)
+            # find train examples with activity
+            tmp_file = normalization.rolling_window_z_norm(tmp_file, window_size)
+            # will go through all frames and extract events that within a meaned kernel exceed the
+            # min_z_score threshold
+            # returns a list of events in the form [frame, y-coord, x-coord]
+            frames_and_positions = get_frames_position(
+                tmp_file, min_z_score, kernel_size
+            )
+            self.file_dict[idx] = {
+                "filepath": filepath,
+                "shape": tmp_file.shape,
+                "mean": mean,
+                "std": std,
+                "frames_and_positions": frames_and_positions,
+            }
         if self.overwrite:
             self.write_yaml()
