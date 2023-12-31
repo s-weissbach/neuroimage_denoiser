@@ -16,7 +16,7 @@ class ModelWrapper:
         self.load_weights(weights)
         self.model.to(self.device)
         # initalize image
-        self.img = np.empty
+        self.img = np.empty((0))
         self.img_height = -1
         self.img_width = -1
         self.img_mean = np.nan
