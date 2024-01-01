@@ -35,5 +35,7 @@ def get_frames_position(
     activitymap = compute_activitymap(img, kernelsize)
     above_z = np.argwhere(activitymap > min_z_score)
     for event in above_z:
-        frames_w_pos.append([event[0], event[1] * kernelsize, event[2] * kernelsize])
+        frames_w_pos.append(
+            [int(event[0]), int(event[1] * kernelsize), int(event[2] * kernelsize)]
+        )
     return frames_w_pos

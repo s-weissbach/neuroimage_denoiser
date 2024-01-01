@@ -13,9 +13,9 @@ class TrainFiles:
         self.overwrite = overwrite
         self.file_dict = {}
         if os.path.exists(self.train_yaml_path):
-            self.open_json()
+            self.open_yaml()
 
-    def open_json(self) -> None:
+    def open_yaml(self) -> None:
         if os.path.exists(self.train_yaml_path):
             with open(self.train_yaml_path, "r") as f:
                 self.file_dict = yaml.safe_load(f)
@@ -46,7 +46,9 @@ class TrainFiles:
             mean = np.mean(tmp_file)
             std = np.std(tmp_file)
             # find train examples with activity
-            tmp_file = normalization.rolling_window_z_norm(tmp_file, window_size)
+            tmp_file = normalization.rolling_window_z_norm(
+                tmp_file, window_size, n_threads=4
+            )
             # will go through all frames and extract events that within a meaned kernel exceed the
             # min_z_score threshold
             # returns a list of events in the form [frame, y-coord, x-coord]
@@ -55,10 +57,11 @@ class TrainFiles:
             )
             self.file_dict[idx] = {
                 "filepath": filepath,
-                "shape": tmp_file.shape,
-                "mean": mean,
-                "std": std,
+                "shape": list(tmp_file.shape),
+                "mean": float(mean),
+                "std": float(std),
                 "frames_and_positions": frames_and_positions,
             }
+            break
         if self.overwrite:
             self.write_yaml()
