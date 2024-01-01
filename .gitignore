@@ -1,5 +1,7 @@
 # no pytorch weights (size limitations of github)
 *.pt
+# yaml file
+*.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
