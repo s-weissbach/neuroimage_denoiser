@@ -62,6 +62,5 @@ class TrainFiles:
                 "std": float(std),
                 "frames_and_positions": frames_and_positions,
             }
-            break
         if self.overwrite:
             self.write_yaml()
