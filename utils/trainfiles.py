@@ -33,6 +33,8 @@ class TrainFiles:
         min_z_score: float,
         kernel_size: int,
         window_size: int = 50,
+        n_threads: int = 1,
+        foreground_background_split: float = 0.1,
     ):
         self.file_dict = {}
         files_to_do = []
@@ -47,13 +49,13 @@ class TrainFiles:
             std = np.std(tmp_file)
             # find train examples with activity
             tmp_file = normalization.rolling_window_z_norm(
-                tmp_file, window_size, n_threads=4
+                tmp_file, window_size, n_threads=n_threads
             )
             # will go through all frames and extract events that within a meaned kernel exceed the
             # min_z_score threshold
             # returns a list of events in the form [frame, y-coord, x-coord]
             frames_and_positions = get_frames_position(
-                tmp_file, min_z_score, kernel_size
+                tmp_file, min_z_score, kernel_size, foreground_background_split
             )
             self.file_dict[idx] = {
                 "filepath": filepath,

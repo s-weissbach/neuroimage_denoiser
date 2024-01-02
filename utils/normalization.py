@@ -34,7 +34,7 @@ def mp_rolling_window_z_norm(parameters: tuple) -> list[np.ndarray]:
 
 
 def rolling_window_z_norm(
-    img: np.ndarray, window_size: int, n_threads: int = 10
+    img: np.ndarray, window_size: int, n_threads: int = 1
 ) -> np.ndarray:
     frames_before = window_size // 2
     frames_after = window_size - frames_before

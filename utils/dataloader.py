@@ -17,7 +17,6 @@ class DataLoader:
         load_multiple_targets_per_file: bool = False,
         n_multiple_targets: int = 5,
         use_active_frames: bool = True,
-        crop_size: int = 16,
     ):
         """
         Initialize the DataLoader.
@@ -32,6 +31,7 @@ class DataLoader:
         - load_multiple_targets_per_file: Whether to load multiple targets from a file.
         - n_multiple_targets: Number of targets to load per file.
         - max_intensity: Maximum intensity value in the images.
+        - use_active_frames: whether to use active frames/regions only. Use same train_height/train_width as used with trainfiles.py
         """
         if load_multiple_targets_per_file and n_multiple_targets > batch_size:
             raise ValueError(
@@ -50,7 +50,6 @@ class DataLoader:
         self.train_width = train_width
         self.load_multiple_targets_per_file = load_multiple_targets_per_file
         self.use_active_frames = use_active_frames
-        self.crop_size = crop_size
         self.epoch_done = False
         if self.load_multiple_targets_per_file:
             self.n_multiple_targets = n_multiple_targets
@@ -83,6 +82,9 @@ class DataLoader:
                 "mean": self.file_dict[iglu_movie]["mean"],
                 "std": self.file_dict[iglu_movie]["std"],
             }
+        print(
+            f"Found {len(self.train_examples)} samples to train. \n Batch size is {self.batch_size} -> {len(self.train_examples)//self.batch_size} iterations per epoch."
+        )
         self.shuffle_array()
         self.X_list = []
         self.y_list = []
