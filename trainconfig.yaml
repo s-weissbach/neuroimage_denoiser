@@ -1,0 +1,8 @@
+batch_size: 32
+learning_rate: 0.0001
+load_multiple_targets: true
+n_post: 2
+n_pre: 2
+num_epochs: 1
+train_height: 32
+train_width: 32
