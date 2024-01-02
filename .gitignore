@@ -2,6 +2,8 @@
 *.pt
 # yaml file
 *.yaml
+# nohup files
+nohup.out
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
