@@ -44,7 +44,9 @@ def get_frames_position(
     bg_images_to_select = (1 / foreground_background_split - 1) * len(frames_w_pos)
     below_z = np.argwhere(activitymap <= min_z_score)
     np.random.shuffle(below_z)
-    for non_event in below_z:
+    for i, non_event in enumerate(below_z):
+        if i > bg_images_to_select:
+            break
         frames_w_pos.append(
             [
                 int(non_event[0]),

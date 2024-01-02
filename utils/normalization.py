@@ -44,7 +44,7 @@ def rolling_window_z_norm(
     for start in range(0, seq_len, seq_len // n_threads):
         end = start + seq_len // n_threads
         parameters.append([img, start, end, frames_before, frames_after])
-    parameters[-1][-1] = seq_len
+    parameters[-1][-1] = seq_len - 1
     with Pool(n_threads) as pool:
         z_scaled_img = list(pool.imap(mp_rolling_window_z_norm, parameters))
     return np.array(z_scaled_img).reshape(img.shape)
