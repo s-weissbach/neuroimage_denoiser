@@ -1,10 +1,10 @@
 import os
-import tifffile
 import yaml
 import numpy as np
 from tqdm import tqdm
 import utils.normalization as normalization
 from utils.activitymap import get_frames_position
+from utils.open_file import open_file
 
 
 class TrainFiles:
@@ -44,7 +44,7 @@ class TrainFiles:
                     continue
                 files_to_do.append(os.path.join(root, file))
         for idx, filepath in tqdm(enumerate(files_to_do), total=len(files_to_do)):
-            tmp_file = tifffile.imread(filepath)
+            tmp_file = open_file(filepath)
             mean = np.mean(tmp_file)
             std = np.std(tmp_file)
             # find train examples with activity

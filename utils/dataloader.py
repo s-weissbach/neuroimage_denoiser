@@ -1,9 +1,8 @@
 from utils.trainfiles import TrainFiles
 import numpy as np
-import tifffile
 import torch
 import utils.normalization as normalization
-
+from utils.open_file import open_file
 
 class DataLoader:
     def __init__(
@@ -169,7 +168,7 @@ class DataLoader:
         - mean: Mean value for scaling.
         - std: Standard deviation for scaling.
         """
-        img = tifffile.imread(filepath)
+        img = open_file(filepath)
         img = self.crop_pad_img(img, y_min, x_min)
         for i in range(self.n_multiple_targets):
             target_ = target + i
