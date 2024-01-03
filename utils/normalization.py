@@ -22,6 +22,10 @@ def z_norm(
 
 def mp_rolling_window_z_norm(parameters: tuple) -> list[np.ndarray]:
     img, seq_start, seq_end, frames_before, frames_after = parameters
+    # something weird here: index out of bounds error that should not happen
+    # temporary fix
+    if seq_end >= img.shape[0]:
+        seq_end = img.shape[0] - 1
     result = []
     for idx_frame in range(seq_start, seq_end):
         start = max(0, idx_frame - frames_before)
