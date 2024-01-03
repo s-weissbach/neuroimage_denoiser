@@ -78,8 +78,8 @@ class DataLoader:
                     for target in range(self.n_pre + 1, iterate_to, iterate_step)
                 ]
             self.norm_vals[path] = {
-                "mean": self.file_dict[iglu_movie]["mean"],
-                "std": self.file_dict[iglu_movie]["std"],
+                "mean": np.array(self.file_dict[iglu_movie]["mean"]),
+                "std": np.array(self.file_dict[iglu_movie]["std"]),
             }
         print(
             f"Found {len(self.train_examples)} samples to train. \n Batch size is {self.batch_size} -> {len(self.train_examples)//self.batch_size} iterations per epoch."

@@ -45,8 +45,8 @@ class TrainFiles:
                 files_to_do.append(os.path.join(root, file))
         for idx, filepath in tqdm(enumerate(files_to_do), total=len(files_to_do)):
             tmp_file = open_file(filepath)
-            mean = np.mean(tmp_file)
-            std = np.std(tmp_file)
+            mean = np.mean(tmp_file,axis=0).tolist()
+            std = np.std(tmp_file,axis=0).tolist()
             # find train examples with activity
             tmp_file = normalization.rolling_window_z_norm(
                 tmp_file, window_size, n_threads=n_threads
@@ -60,8 +60,8 @@ class TrainFiles:
             self.file_dict[idx] = {
                 "filepath": filepath,
                 "shape": list(tmp_file.shape),
-                "mean": float(mean),
-                "std": float(std),
+                "mean": mean,
+                "std": std,
                 "frames_and_positions": frames_and_positions,
             }
         if self.overwrite:
