@@ -15,8 +15,8 @@ def get_patch_value(patch: np.ndarray, roi_size: int) -> float:
     """
     max_y,max_x = patch.shape
     max_val = -np.inf
-    for y in max_y-roi_size:
-        for x in max_x-roi_size:
+    for y in range(max_y-roi_size):
+        for x in range(max_x-roi_size):
             mean = np.mean(patch[y:y+roi_size,x:x+roi_size])
             if mean > max_val:
                 max_val = mean
