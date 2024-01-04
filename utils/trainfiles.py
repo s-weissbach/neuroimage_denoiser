@@ -37,6 +37,7 @@ class TrainFiles:
         fileendings: list[str],
         min_z_score: float,
         kernel_size: int,
+        roi_size: int,
         output_h5_file: str,
         n_pre: int = 2,
         n_post: int = 2,
@@ -80,7 +81,7 @@ class TrainFiles:
             # min_z_score threshold
             # returns a list of events in the form [frame, y-coord, x-coord]
             frames_and_positions = get_frames_position(
-                tmp_file_rolling_normalization, min_z_score, kernel_size, foreground_background_split
+                tmp_file_rolling_normalization, min_z_score, kernel_size, roi_size, foreground_background_split
             )
             print(f'Found {len(frames_and_positions)} example(s) in file {filepath}')
             tmp_file = normalization.z_norm(tmp_file, mean, std)

@@ -26,6 +26,12 @@ def main() -> None:
         help="Kernel size for one patch of the image sequence (default: 32)",
     )
     parser.add_argument(
+        "--roi_size",
+        type=int,
+        default=8,
+        help="Expected ROI size; assumes for detection square of (roi_size x roi_size) (default: 8)",
+    )
+    parser.add_argument(
         "--trainh5", "-t", required=True, help="Path to outputpath of the h5 file that will be created"
     )
     parser.add_argument(
@@ -57,6 +63,7 @@ def main() -> None:
     folder_path = args.path
     file_endings = args.fileendings
     kernel_size = args.kernel_size
+    roi_size = args.roi_size
     min_z_score = args.min_z_score
     window_size = args.window_size
     num_threads = args.threads
@@ -70,6 +77,7 @@ def main() -> None:
         fileendings=file_endings,
         min_z_score=min_z_score,
         kernel_size=kernel_size,
+        roi_size=roi_size,
         window_size=window_size,
         n_threads=num_threads,
         foreground_background_split=fg_split,
