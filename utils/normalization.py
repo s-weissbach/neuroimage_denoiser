@@ -1,5 +1,4 @@
 import numpy as np
-from typing import Union
 import ctypes
 from multiprocessing import Array, Pool
 

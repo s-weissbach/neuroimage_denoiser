@@ -69,22 +69,34 @@ class TrainFiles:
         else:
             hf = h5py.File(output_h5_file, 'w')
             idx = 0
+        import time
         for filepath in tqdm(files_to_do, total=len(files_to_do)):
+            start = time.time()
             tmp_file = open_file(filepath)
-            mean = np.mean(tmp_file,axis=0)
-            std = np.std(tmp_file,axis=0)
+            print(f'Opening file: {round(time.time()-start,4)}s')
+            start = time.time()
             # find train examples with activity
             tmp_file_rolling_normalization = normalization.rolling_window_z_norm(
                 tmp_file, window_size, n_threads=n_threads
             )
+            print(f'Rolling window normalization: {round(time.time()-start,4)}s')
+            start = time.time()
             # will go through all frames and extract events that within a meaned kernel exceed the
             # min_z_score threshold
             # returns a list of events in the form [frame, y-coord, x-coord]
             frames_and_positions = get_frames_position(
-                tmp_file_rolling_normalization, min_z_score, kernel_size, roi_size, foreground_background_split
+                tmp_file_rolling_normalization, min_z_score, kernel_size, roi_size, foreground_background_split, n_threads
             )
+            print(f'Frames and positons: {round(time.time()-start,4)}s')
             print(f'Found {len(frames_and_positions)} example(s) in file {filepath}')
+            start = time.time()
+            mean = np.mean(tmp_file,axis=0)
+            std = np.std(tmp_file,axis=0)
+            print(f'Mean and std: {round(time.time()-start,4)}s')
+            start = time.time()
             tmp_file = normalization.z_norm(tmp_file, mean, std)
+            print(f'Normalization: {round(time.time()-start,4)}s')
+            start = time.time()
             # create dict to be stored as h5 file
             for train_example,event in enumerate(frames_and_positions):
                 target_frame, y_pos, x_pos = event
@@ -92,7 +104,8 @@ class TrainFiles:
                 example = self.get_train_example(tmp_file,target_frame, y_pos, x_pos, kernel_size, kernel_size, n_pre, n_post)
                 hf.create_dataset(str(idx), data=example)
                 idx += 1
+            print(f'Write to h5 file: {round(time.time()-start,4)}s')
+            start = time.time()
         hf.close()
         self.train_examples = pd.DataFrame(train_example_list,columns=['h5_idx', 'original_filepath', 'target_frame', 'y_pos', 'x_pos'])
-        if self.overwrite:
-            self.train_examples.to_csv(self.train_csv_path)
+        self.train_examples.to_csv(self.train_csv_path)
