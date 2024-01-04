@@ -1,4 +1,6 @@
 import numpy as np
+import ctypes
+from multiprocessing import Array, Pool
 
 def get_patch_value(patch: np.ndarray, roi_size: int) -> float:
     """
@@ -22,37 +24,24 @@ def get_patch_value(patch: np.ndarray, roi_size: int) -> float:
                 max_val = mean
     return max_val
 
-def transform_frame(
-    img: np.ndarray, kernelsize: int, h_actmap: int, w_actmap: int, roi_size: int
-) -> list[float]:
-    """
-    Transform an image frame into an activity map by computing the maximum mean values
-    within overlapping patches.
 
-    Parameters:
-    - img (np.ndarray): Input image frame as a 2D NumPy array.
-    - kernelsize (int): Size of the kernel used for patch extraction.
-    - h_actmap (int): Height of the resulting activity map.
-    - w_actmap (int): Width of the resulting activity map.
-    - roi_size (int): Size of the sliding window (Region of Interest).
-
-    Returns:
-    - list[float]: List representing the activity map for the given frame.
-    """
+def transform_frame(parameters: tuple) -> list[float]:
+    frame_idx, kernelsize, h_activitymap, w_activitymap, roi_size = parameters
+    frame = shared_array[frame_idx]
     activity_map_frame = []
-    for y in range(h_actmap):
+    for y in range(h_activitymap):
         start_y = y * kernelsize
         stop_y = (y + 1) * kernelsize
         row = []
-        for x in range(w_actmap):
+        for x in range(w_activitymap):
             start_x = x * kernelsize
             stop_x = (x + 1) * kernelsize
-            row.append(get_patch_value(img[start_y:stop_y, start_x:stop_x], roi_size))
+            row.append(get_patch_value(frame[start_y:stop_y, start_x:stop_x], roi_size))
         activity_map_frame.append(row)
     return activity_map_frame
 
 
-def compute_activitymap(img: np.ndarray, kernelsize, roi_size) -> np.ndarray:
+def compute_activitymap(img: np.ndarray, kernelsize: int, roi_size: int, n_threads: int) -> np.ndarray:
     """
     Compute the activity map for a sequence of image frames by applying the
     transform_frame function.
@@ -67,11 +56,17 @@ def compute_activitymap(img: np.ndarray, kernelsize, roi_size) -> np.ndarray:
     """
     h_activitymap = img.shape[1] // kernelsize
     w_activitymap = img.shape[2] // kernelsize
-    activitymap = []
-    for frame in img:
-        activitymap.append(
-            transform_frame(frame, kernelsize, h_activitymap, w_activitymap, roi_size)
-        )
+    shared_array_base = Array(ctypes.c_double, img.shape[0]*img.shape[1]*img.shape[2])
+    global shared_array
+    shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
+    shared_array = shared_array.reshape(img.shape)
+    for i,frame in enumerate(img):
+        shared_array[i] = frame
+    parameters = []
+    for frame_idx in range(img.shape[0]):
+        parameters.append((frame_idx, kernelsize, h_activitymap, w_activitymap, roi_size))
+    with Pool(n_threads) as pool:
+        activitymap = list(pool.imap(transform_frame,parameters))
     return np.array(activitymap)
 
 
@@ -79,8 +74,9 @@ def get_frames_position(
     img: np.ndarray,
     min_z_score: float,
     kernelsize: int = 32,
-    roi_size: int = 8,
+    roi_size: int = 4,
     foreground_background_split: float = 0.5,
+    n_threads: int = 1
 ) -> list[list[int]]:
     """
     Identify positions of frames based on the computed activity map and a minimum Z-score threshold.
@@ -96,23 +92,21 @@ def get_frames_position(
     - list[list[int]]: List of frame positions, each represented as [frame_index, y_position, x_position].
     """
     frames_w_pos = []
-    activitymap = compute_activitymap(img, kernelsize, roi_size)
+    activitymap = compute_activitymap(img, kernelsize, roi_size, n_threads)
     above_z = np.argwhere(activitymap > min_z_score)
-    for event in above_z:
+    for example in above_z:
+        frame,y,x = example
         frames_w_pos.append(
-            [int(event[0]), int(event[1] * kernelsize), int(event[2] * kernelsize)]
+            [int(frame), int(y * kernelsize), int(x * kernelsize)]
         )
     bg_images_to_select = (1 / foreground_background_split - 1) * len(frames_w_pos)
     below_z = np.argwhere(activitymap <= min_z_score)
     np.random.shuffle(below_z)
-    for i, non_event in enumerate(below_z):
+    for i, example in enumerate(below_z):
         if i > bg_images_to_select:
             break
+        frame,y,x = example
         frames_w_pos.append(
-            [
-                int(non_event[0]),
-                int(non_event[1] * kernelsize),
-                int(non_event[2] * kernelsize),
-            ]
+            [int(frame), int(y * kernelsize), int(x * kernelsize)]
         )
     return frames_w_pos
