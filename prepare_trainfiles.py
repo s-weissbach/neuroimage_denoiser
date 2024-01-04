@@ -5,7 +5,7 @@ from utils.trainfiles import TrainFiles
 def main() -> None:
     parser = argparse.ArgumentParser(description="Image Search Tool")
     # Required argument
-    parser.add_argument("--yaml", required=True, help="Path to yaml file")
+    parser.add_argument("--csv", required=True, help="Output csv file, that holds meta information to the train examples in h5 file")
 
     parser.add_argument(
         "--path", "-p", required=True, help="Path to folder containing images"
@@ -26,13 +26,13 @@ def main() -> None:
         help="Kernel size for one patch of the image sequence (default: 32)",
     )
     parser.add_argument(
-        "--traindir", "-t", required=True, help="Path to outputfolder where the h5 files for training will be stored"
+        "--trainh5", "-t", required=True, help="Path to outputpath of the h5 file that will be created"
     )
     parser.add_argument(
         "--min_z_score",
         "-z",
-        type=int,
-        default=4,
+        type=float,
+        default=3.0,
         help="Minimum Z score to be considered active patch (default: 4)",
     )
     parser.add_argument(
@@ -53,7 +53,7 @@ def main() -> None:
         help="Foreground to background split (default: 0.5)",
     )
     args = parser.parse_args()
-    yaml_path = args.yaml
+    csv_path = args.csv
     folder_path = args.path
     file_endings = args.fileendings
     kernel_size = args.kernel_size
@@ -61,9 +61,9 @@ def main() -> None:
     window_size = args.window_size
     num_threads = args.threads
     fg_split = args.fgsplit
-    train_dir = args.traindir
+    output_h5_file = args.trainh5
 
-    trainfiles = TrainFiles(yaml_path, True)
+    trainfiles = TrainFiles(csv_path, True)
 
     trainfiles.files_to_traindata(
         directory=folder_path,
@@ -73,7 +73,7 @@ def main() -> None:
         window_size=window_size,
         n_threads=num_threads,
         foreground_background_split=fg_split,
-        train_dir=train_dir
+        output_h5_file=output_h5_file
     )
 
 

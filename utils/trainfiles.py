@@ -1,8 +1,7 @@
 import os
 import pandas as pd
-import yaml
 import numpy as np
-from silx.io.dictdump import dicttoh5
+import h5py
 from tqdm import tqdm
 import utils.normalization as normalization
 from utils.activitymap import get_frames_position
@@ -17,7 +16,7 @@ class TrainFiles:
         if os.path.exists(self.train_csv_path):
             self.open_csv()
         else:
-            self.train_examples = pd.DataFrame(columns=['h5_path', 'h5_idx', 'original_filepath'])
+            self.train_examples = pd.DataFrame(columns=['h5_idx', 'original_filepath', 'target_frame', 'y_pos', 'x_pos'])
 
     def open_csv(self) -> None:
         if os.path.exists(self.train_csv_path):
@@ -38,16 +37,16 @@ class TrainFiles:
         fileendings: list[str],
         min_z_score: float,
         kernel_size: int,
-        train_dir: str,
+        output_h5_file: str,
         n_pre: int = 2,
-        n_pos: int = 2,
+        n_post: int = 2,
         window_size: int = 50,
         n_threads: int = 1,
         foreground_background_split: float = 0.1,
     ):
         '''
         Iterates through given directory and searches for all files having the specified fileendings. Opens these images and extracts active/inactive
-        patches (size: kernel_size) from the files (above/below min_z_score) and writes per file one h5 file in train_dir. active: foreground; inactive: background are
+        patches (size: kernel_size) from the files (above/below min_z_score) and writes a single h5 file for training. active: foreground; inactive: background are
         splitted according to foreground_background_split.
         A train example consists of n_pre and n_post frames around the target frame.
         '''
@@ -58,10 +57,18 @@ class TrainFiles:
                 if not any([file.endswith(ending) for ending in fileendings]):
                     continue
                 files_to_do.append(os.path.join(root, file))
-        for idx, filepath in tqdm(enumerate(files_to_do), total=len(files_to_do)):
-            filename = '.'.join(os.path.basename(filepath).split('.')[:-1])
-            h5_path = os.path.join(train_dir,f'{filename}_npre{n_pre}_npos{n_pos}_kernelsize{kernel_size}.h5')
-            tmp_train_data = {}
+        if os.path.exists(output_h5_file) and not self.overwrite:
+            print('Found existing h5-file. Will append.')
+            hf = h5py.File(output_h5_file, 'w')
+            idx = np.max([int(key) for key in hf.keys()]) + 1
+        elif os.path.exists(output_h5_file) and self.overwrite:
+            os.remove(output_h5_file)
+            hf = h5py.File(output_h5_file, 'w')
+            idx = 0
+        else:
+            hf = h5py.File(output_h5_file, 'w')
+            idx = 0
+        for filepath in tqdm(files_to_do, total=len(files_to_do)):
             tmp_file = open_file(filepath)
             mean = np.mean(tmp_file,axis=0)
             std = np.std(tmp_file,axis=0)
@@ -75,13 +82,16 @@ class TrainFiles:
             frames_and_positions = get_frames_position(
                 tmp_file_rolling_normalization, min_z_score, kernel_size, foreground_background_split
             )
+            print(f'Found {len(frames_and_positions)} example(s) in file {filepath}')
             tmp_file = normalization.z_norm(tmp_file, mean, std)
             # create dict to be stored as h5 file
             for train_example,event in enumerate(frames_and_positions):
                 target_frame, y_pos, x_pos = event
-                tmp_train_data[str(train_example)] = self.get_train_example(tmp_file,target_frame, y_pos, x_pos, kernel_size, kernel_size, n_pre, n_pos)
-                train_example_list.append([h5_path, str(train_example), filepath])
-            dicttoh5(tmp_train_data,h5_path)
-        self.train_examples = pd.DataFrame(train_example_list,columns=['h5_path', 'h5_idx', 'original_filepath'])
+                train_example_list.append([str(train_example), filepath, target_frame, y_pos, x_pos])
+                example = self.get_train_example(tmp_file,target_frame, y_pos, x_pos, kernel_size, kernel_size, n_pre, n_post)
+                hf.create_dataset(str(idx), data=example)
+                idx += 1
+        hf.close()
+        self.train_examples = pd.DataFrame(train_example_list,columns=['h5_idx', 'original_filepath', 'target_frame', 'y_pos', 'x_pos'])
         if self.overwrite:
             self.train_examples.to_csv(self.train_csv_path)
