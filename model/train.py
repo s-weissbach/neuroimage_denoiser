@@ -15,6 +15,17 @@ def train(
     modelpath: str = "unet.pt",
     history_savepath: str = "train_loss.npy",
 ) -> None:
+    """
+    Train the U-Net model using the specified data loader.
+
+    Parameters:
+    - model (UNet): U-Net model to be trained.
+    - dataloader (DataLoader): Data loader providing training data.
+    - num_epochs (int): Number of training epochs (default is 1).
+    - learningrate (float): Learning rate for the optimizer (default is 0.0001).
+    - modelpath (str): Filepath to save the trained model (default is "unet.pt").
+    - history_savepath (str): Filepath to save the training loss history (default is "train_loss.npy").
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learningrate)

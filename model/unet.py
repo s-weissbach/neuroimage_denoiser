@@ -1,10 +1,23 @@
 import model.modelparts as modelparts
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class UNet(nn.Module):
+    """
+    U-Net architecture for image denoising.
+
+    Parameters:
+    - n_channels (int): Number of input channels.
+    """
     def __init__(self, n_channels: int) -> None:
+        """
+        Initialize the U-Net model.
+
+        Parameters:
+        - n_channels (int): Number of input channels.
+        """
         super(UNet, self).__init__()
         self.n_channels = n_channels
 
@@ -19,7 +32,16 @@ class UNet(nn.Module):
         self.up4 = modelparts.Up(128, 64)
         self.out_block = nn.Conv2d(64, 1, kernel_size=1)
 
-    def forward(self, input):
+    def forward(self, input) -> torch.Tensor:
+        """
+        Forward pass through the U-Net model.
+
+        Parameters:
+        - input: Input tensor.
+
+        Returns:
+        - torch.Tensor: Output tensor.
+        """
         x1 = self.in_block(input)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
