@@ -2,6 +2,7 @@ import numpy as np
 import ctypes
 from multiprocessing import Array, Pool
 
+
 def get_patch_value(patch: np.ndarray, roi_size: int) -> float:
     """
     Calculate the maximum mean value within a sliding window (patch) of the specified size.
@@ -15,14 +16,12 @@ def get_patch_value(patch: np.ndarray, roi_size: int) -> float:
     Returns:
     - float: Maximum mean value within the specified patch.
     """
-    max_y,max_x = patch.shape
-    max_val = -np.inf
-    for y in range(max_y-roi_size):
-        for x in range(max_x-roi_size):
-            mean = np.mean(patch[y:y+roi_size,x:x+roi_size])
-            if mean > max_val:
-                max_val = mean
-    return max_val
+    max_y, max_x = patch.shape
+    patch_vals = []
+    for y in range(max_y - roi_size):
+        for x in range(max_x - roi_size):
+            patch_vals.append(np.mean(patch[y : y + roi_size, x : x + roi_size]))
+    return max(patch_vals)
 
 
 def transform_frame(parameters: tuple) -> list[float]:
@@ -41,7 +40,9 @@ def transform_frame(parameters: tuple) -> list[float]:
     return activity_map_frame
 
 
-def compute_activitymap(img: np.ndarray, kernelsize: int, roi_size: int, n_threads: int) -> np.ndarray:
+def compute_activitymap(
+    img: np.ndarray, kernelsize: int, roi_size: int, n_threads: int
+) -> np.ndarray:
     """
     Compute the activity map for a sequence of image frames by applying the
     transform_frame function.
@@ -56,17 +57,21 @@ def compute_activitymap(img: np.ndarray, kernelsize: int, roi_size: int, n_threa
     """
     h_activitymap = img.shape[1] // kernelsize
     w_activitymap = img.shape[2] // kernelsize
-    shared_array_base = Array(ctypes.c_double, img.shape[0]*img.shape[1]*img.shape[2])
+    shared_array_base = Array(
+        ctypes.c_double, img.shape[0] * img.shape[1] * img.shape[2]
+    )
     global shared_array
     shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
     shared_array = shared_array.reshape(img.shape)
-    for i,frame in enumerate(img):
+    for i, frame in enumerate(img):
         shared_array[i] = frame
     parameters = []
     for frame_idx in range(img.shape[0]):
-        parameters.append((frame_idx, kernelsize, h_activitymap, w_activitymap, roi_size))
+        parameters.append(
+            (frame_idx, kernelsize, h_activitymap, w_activitymap, roi_size)
+        )
     with Pool(n_threads) as pool:
-        activitymap = list(pool.imap(transform_frame,parameters))
+        activitymap = list(pool.imap(transform_frame, parameters))
     return np.array(activitymap)
 
 
@@ -76,7 +81,7 @@ def get_frames_position(
     kernelsize: int = 32,
     roi_size: int = 4,
     foreground_background_split: float = 0.5,
-    n_threads: int = 1
+    n_threads: int = 1,
 ) -> list[list[int]]:
     """
     Identify positions of frames based on the computed activity map and a minimum Z-score threshold.
@@ -95,18 +100,14 @@ def get_frames_position(
     activitymap = compute_activitymap(img, kernelsize, roi_size, n_threads)
     above_z = np.argwhere(activitymap > min_z_score)
     for example in above_z:
-        frame,y,x = example
-        frames_w_pos.append(
-            [int(frame), int(y * kernelsize), int(x * kernelsize)]
-        )
+        frame, y, x = example
+        frames_w_pos.append([int(frame), int(y * kernelsize), int(x * kernelsize)])
     bg_images_to_select = (1 / foreground_background_split - 1) * len(frames_w_pos)
     below_z = np.argwhere(activitymap <= min_z_score)
     np.random.shuffle(below_z)
     for i, example in enumerate(below_z):
         if i > bg_images_to_select:
             break
-        frame,y,x = example
-        frames_w_pos.append(
-            [int(frame), int(y * kernelsize), int(x * kernelsize)]
-        )
+        frame, y, x = example
+        frames_w_pos.append([int(frame), int(y * kernelsize), int(x * kernelsize)])
     return frames_w_pos
