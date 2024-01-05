@@ -4,6 +4,10 @@
 trainfiles.csv
 # nohup files
 nohup.out
+# example files from training
+example/*
+example/*.png
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
