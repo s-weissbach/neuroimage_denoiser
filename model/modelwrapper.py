@@ -1,8 +1,9 @@
 from model.unet import UNet
 import utils.normalization as normalization
+from utils.open_file import open_file
 import torch
 import numpy as np
-import tifffile
+from tqdm import tqdm
 
 
 class ModelWrapper:
@@ -14,6 +15,7 @@ class ModelWrapper:
     - n_pre (int): Number of frames to use before the target frame.
     - n_post (int): Number of frames to use after the target frame.
     """
+
     def __init__(self, weights: str, n_pre: int, n_post: int) -> None:
         """
         Initialize the ModelWrapper.
@@ -34,11 +36,11 @@ class ModelWrapper:
         self.load_weights(weights)
         self.model.to(self.device)
         # initalize image
-        self.img = np.empty((0))
+        self.img = np.empty((0, 0, 0))
         self.img_height = -1
         self.img_width = -1
-        self.img_mean = np.nan
-        self.img_std = np.nan
+        self.img_mean = np.empty((0, 0))
+        self.img_std = np.empty((0, 0))
 
     def load_weights(self, weights: str) -> None:
         """
@@ -57,11 +59,11 @@ class ModelWrapper:
         Parameters:
         - img_path (str): Path to the image file.
         """
-        self.img = tifffile.imread(img_path)
+        self.img = open_file(img_path)
         _, self.img_height, self.img_width = self.img.shape
         # normalization
-        self.img_mean = np.mean(self.img)
-        self.img_std = np.std(self.img)
+        self.img_mean: np.ndarray = np.mean(self.img, axis=0)
+        self.img_std: np.ndarray = np.std(self.img, axis=0)
         self.img: np.ndarray = normalization.z_norm(
             self.img, self.img_mean, self.img_std
         )
@@ -96,7 +98,9 @@ class ModelWrapper:
         """
         denoised_image_sequence = []
         self.load_img(img_path)
-        for target in range(self.n_pre + 1, len(self.img) - self.n_post):
+        for target in tqdm(
+            range(self.n_pre + 1, len(self.img) - self.n_post), desc="denoise"
+        ):
             X = self.get_prediction_frames(target).to(self.device)
             y_pred = np.array(self.model(X).detach().to("cpu")).reshape(
                 self.img_height, self.img_width
