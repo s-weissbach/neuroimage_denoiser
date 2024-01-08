@@ -22,9 +22,9 @@ def open_file(filepath: str) -> np.ndarray:
     """
     tiff_fileendings = [".tif", ".tiff", ".stk"]
     if filepath.endswith("nd2"):
-        return nd2.imread(filepath)
+        return nd2.imread(filepath).astype(np.float64)
     elif any([filepath.endswith(fileending) for fileending in tiff_fileendings]):
-        return tifffile.imread(filepath)
+        return tifffile.imread(filepath).astype(np.float64)
     else:
         raise NotImplementedError(
             f'Fileformat .{filepath.split(".")[-1]} is currently not implemented. Please change utils/open_file.py'
