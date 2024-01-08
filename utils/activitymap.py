@@ -1,33 +1,16 @@
 import numpy as np
-import ctypes
-from multiprocessing import Array, Pool
+from scipy.ndimage import uniform_filter
 
 
-def get_patch_value(patch: np.ndarray, roi_size: int) -> float:
-    """
-    Calculate the maximum mean value within a sliding window (patch) of the specified size.
-    Patch would represent a part of the image on that is trained, while ROI should roughly
-    represent the size of one ROI (e.g. synapse).
-
-    Parameters:
-    - patch (np.ndarray): Input patch as a 2D NumPy array.
-    - roi_size (int): Size of the sliding window (Region of Interest).
-
-    Returns:
-    - float: Maximum mean value within the specified patch.
-    """
-    max_y, max_x = patch.shape
-    patch_vals = []
-    for y in range(max_y - roi_size):
-        for x in range(max_x - roi_size):
-            patch_vals.append(np.mean(patch[y : y + roi_size, x : x + roi_size]))
-    return max(patch_vals)
-
-
-def transform_frame(parameters: tuple) -> list[float]:
-    frame_idx, kernelsize, h_activitymap, w_activitymap, roi_size = parameters
-    frame = shared_array[frame_idx]
+def transform_frame(
+    frame: np.ndarray,
+    kernelsize: int,
+    h_activitymap: int,
+    w_activitymap: int,
+    roi_size: int,
+) -> list[float]:
     activity_map_frame = []
+    mean_frame = uniform_filter(frame, roi_size, mode="constant")
     for y in range(h_activitymap):
         start_y = y * kernelsize
         stop_y = (y + 1) * kernelsize
@@ -35,14 +18,13 @@ def transform_frame(parameters: tuple) -> list[float]:
         for x in range(w_activitymap):
             start_x = x * kernelsize
             stop_x = (x + 1) * kernelsize
-            row.append(get_patch_value(frame[start_y:stop_y, start_x:stop_x], roi_size))
+
+            row.append(np.max(mean_frame[start_y:stop_y, start_x:stop_x]))
         activity_map_frame.append(row)
     return activity_map_frame
 
 
-def compute_activitymap(
-    img: np.ndarray, kernelsize: int, roi_size: int, n_threads: int
-) -> np.ndarray:
+def compute_activitymap(img: np.ndarray, kernelsize: int, roi_size: int) -> np.ndarray:
     """
     Compute the activity map for a sequence of image frames by applying the
     transform_frame function.
@@ -57,21 +39,12 @@ def compute_activitymap(
     """
     h_activitymap = img.shape[1] // kernelsize
     w_activitymap = img.shape[2] // kernelsize
-    shared_array_base = Array(
-        ctypes.c_double, img.shape[0] * img.shape[1] * img.shape[2]
-    )
-    global shared_array
-    shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
-    shared_array = shared_array.reshape(img.shape)
-    for i, frame in enumerate(img):
-        shared_array[i] = frame
-    parameters = []
+    activitymap = []
     for frame_idx in range(img.shape[0]):
-        parameters.append(
-            (frame_idx, kernelsize, h_activitymap, w_activitymap, roi_size)
+        frame = img[frame_idx]
+        activitymap.append(
+            transform_frame(frame, kernelsize, h_activitymap, w_activitymap, roi_size)
         )
-    with Pool(n_threads) as pool:
-        activitymap = list(pool.imap(transform_frame, parameters))
     return np.array(activitymap)
 
 
@@ -81,7 +54,6 @@ def get_frames_position(
     kernelsize: int = 32,
     roi_size: int = 4,
     foreground_background_split: float = 0.5,
-    n_threads: int = 1,
 ) -> list[list[int]]:
     """
     Identify positions of frames based on the computed activity map and a minimum Z-score threshold.
@@ -97,7 +69,7 @@ def get_frames_position(
     - list[list[int]]: List of frame positions, each represented as [frame_index, y_position, x_position].
     """
     frames_w_pos = []
-    activitymap = compute_activitymap(img, kernelsize, roi_size, n_threads)
+    activitymap = compute_activitymap(img, kernelsize, roi_size)
     above_z = np.argwhere(activitymap > min_z_score)
     for example in above_z:
         frame, y, x = example

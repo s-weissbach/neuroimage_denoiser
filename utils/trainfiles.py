@@ -60,7 +60,6 @@ class TrainFiles:
         n_pre: int = 2,
         n_post: int = 2,
         window_size: int = 50,
-        n_threads: int = 1,
         foreground_background_split: float = 0.1,
     ):
         """
@@ -87,16 +86,25 @@ class TrainFiles:
         else:
             hf = h5py.File(output_h5_file, "w")
             idx = 0
+        print(f"Found {len(files_to_do)} file(s).")
         import time
 
         for filepath in tqdm(files_to_do, total=len(files_to_do)):
+            if (
+                self.train_examples[
+                    self.train_examples["original_filepath"] == filepath
+                ].shape[0]
+                > 0
+            ):
+                print(f"Skipepd {filepath} - already in h5 file.")
+                continue
             start = time.time()
             tmp_file = open_file(filepath)
             print(f"Opening file: {round(time.time()-start,4)}s")
             start = time.time()
             # find train examples with activity
             tmp_file_rolling_normalization = normalization.rolling_window_z_norm(
-                tmp_file, window_size, n_threads=n_threads
+                tmp_file, window_size
             )
             print(f"Rolling window normalization: {round(time.time()-start,4)}s")
             start = time.time()
@@ -109,7 +117,6 @@ class TrainFiles:
                 kernel_size,
                 roi_size,
                 foreground_background_split,
-                n_threads,
             )
             print(f"Frames and positons: {round(time.time()-start,4)}s")
             print(f"Found {len(frames_and_positions)} example(s) in file {filepath}")
