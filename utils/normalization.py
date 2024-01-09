@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.ndimage import uniform_filter1d
 
+
 def z_norm(img: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
     """
     Pixelwise z-scaling for the image. z = (x-µ)/σ
@@ -15,8 +16,7 @@ def z_norm(img: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
     """
     return np.divide(np.subtract(img, mean), std)
 
-
-def moving_std(arr, start, end) -> np.ndarray:
+def moving_std(arr:np.ndarray[np.float64], start:int, end:int) -> np.ndarray[np.float64]:
     """
     Calculate the moving standard deviation for a specified range of frames.
 
@@ -28,7 +28,6 @@ def moving_std(arr, start, end) -> np.ndarray:
     """
     std = np.std(arr[start:end], axis=0)
     return std
-
 
 def rolling_window_z_norm(img: np.ndarray, window_size: int):
     """

@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.ndimage import uniform_filter
 
-
 def transform_frame(
     frame: np.ndarray,
     kernelsize: int,
