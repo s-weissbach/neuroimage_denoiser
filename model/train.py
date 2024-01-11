@@ -91,7 +91,6 @@ def train(
                 plot_img(
                     prediction_np, f"example/model_prediction_{i}-batch.png", vmin, vmax
                 )
-
                 model.to(device)
             i += 1
         dataloader.shuffle_array()

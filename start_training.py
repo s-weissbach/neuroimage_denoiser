@@ -40,6 +40,7 @@ def main() -> None:
     n_post = trainconfig["n_post"]
     path_example_img = trainconfig["path_example_img"]
     target_frame_example_img = trainconfig["target_frame_example_img"]
+    predict_every_n_batches = trainconfig["predict_every_n_batches"]
 
     dataloader = DataLoader(train_h5, batch_size, n_pre)
     model = UNet(n_pre + n_post)
@@ -70,6 +71,7 @@ def main() -> None:
             example_img_target=example_img_target_frame,
             example_mean=mean,
             example_std=std,
+            predict_example_every_n_batches=predict_every_n_batches,
         )
     else:
         train(model, dataloader, num_epochs, learning_rate, modelpath)

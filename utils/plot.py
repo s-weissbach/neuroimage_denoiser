@@ -27,3 +27,5 @@ def plot_img(
     else:
         plt.show()
     plt.clf()
+    plt.cla()
+    plt.close()
