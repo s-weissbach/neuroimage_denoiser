@@ -49,6 +49,16 @@ def main() -> None:
         help="Minimum Z score to be considered active patch (default: 4)",
     )
     parser.add_argument(
+        "--before",
+        default=0,
+        help="Number of frames to add before a detected event, to also train to reconstruct the typical raise of the sensor. (default: 0)",
+    )
+    parser.add_argument(
+        "--after",
+        default=0,
+        help="Number of frames to add after a detected event, to also train to reconstruct the typical decay of the sensor. (default: 0)",
+    )
+    parser.add_argument(
         "--window_size",
         "-w",
         type=int,
@@ -75,6 +85,8 @@ def main() -> None:
     kernel_size = args.kernel_size
     roi_size = args.roi_size
     min_z_score = args.min_z_score
+    before = args.before
+    after = args.after
     window_size = args.window_size
     fg_split = args.fgsplit
     output_h5_file = args.trainh5
@@ -86,6 +98,8 @@ def main() -> None:
         directory=folder_path,
         fileendings=file_endings,
         min_z_score=min_z_score,
+        before=before,
+        after=after,
         kernel_size=kernel_size,
         roi_size=roi_size,
         window_size=window_size,
