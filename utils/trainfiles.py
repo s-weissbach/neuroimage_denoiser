@@ -32,6 +32,50 @@ class TrainFiles:
         else:
             print(f"CSV path not found: {self.train_csv_path}")
 
+    def get_incomplete_frames(
+        self,
+        img: np.ndarray,
+        y_pos: int,
+        x_pos: int,
+        height: int,
+        width: int,
+        n_pre: int,
+        n_post: int,
+    ) -> tuple[list[np.ndarray], list[int]]:
+        target_z_len = n_pre + n_post + 1
+        mean = np.mean(img, axis=0)
+        examples = []
+        target_frames = []
+        for target in range(n_pre):
+            example = img[
+                0 : target + n_post + 1, y_pos : y_pos + height, x_pos : x_pos + width
+            ]
+            frames_before = []
+            for _ in range(target_z_len - example.shape[0]):
+                frames_before.append(
+                    mean[y_pos : y_pos + height, x_pos : x_pos + width].copy()
+                )
+            frames_before = np.array(frames_before)
+            example = np.append(frames_before, example, axis=0)
+            examples.append(example)
+            target_frames.append(target)
+        for target in range(n_post):
+            example = img[
+                img.shape[0] - n_pre - (n_post - target) : img.shape[0],
+                y_pos : y_pos + height,
+                x_pos : x_pos + width,
+            ]
+            frames_after = []
+            for _ in range(target_z_len - example.shape[0]):
+                frames_after.append(
+                    mean[y_pos : y_pos + height, x_pos : x_pos + width].copy()
+                )
+            frames_after = np.array(frames_after)
+            example = np.append(example, frames_after, axis=0)
+            examples.append(example)
+            target_frames.append(img.shape[0] - (n_post - target))
+        return (examples, target_frames)
+
     def get_train_example(
         self,
         img: np.ndarray,
@@ -54,6 +98,8 @@ class TrainFiles:
         directory: str,
         fileendings: list[str],
         min_z_score: float,
+        before: int,
+        after: int,
         kernel_size: int,
         roi_size: int,
         output_h5_file: str,
@@ -115,12 +161,16 @@ class TrainFiles:
                 frames_and_positions = get_frames_position(
                     tmp_file_rolling_normalization,
                     min_z_score,
+                    before,
+                    after,
                     kernel_size,
                     roi_size,
                     foreground_background_split,
                 )
                 print(f"Frames and positons: {round(time.time()-start,4)}s")
-                print(f"Found {len(frames_and_positions)} example(s) in file {filepath}")
+                print(
+                    f"Found {len(frames_and_positions)} example(s) in file {filepath}"
+                )
                 start = time.time()
                 mean = np.mean(tmp_file, axis=0)
                 std = np.std(tmp_file, axis=0)
@@ -130,14 +180,14 @@ class TrainFiles:
                 print(f"Normalization: {round(time.time()-start,4)}s")
                 start = time.time()
                 # create dict to be stored as h5 file
-                for train_example, event in enumerate(frames_and_positions):
+                for event in frames_and_positions:
                     target_frame, y_pos, x_pos = event
                     if target_frame <= n_pre:
                         continue
                     if target_frame >= tmp_file.shape[0] - n_post:
                         continue
                     train_example_list.append(
-                        [str(train_example), filepath, target_frame, y_pos, x_pos]
+                        [str(idx), filepath, target_frame, y_pos, x_pos]
                     )
                     example = self.get_train_example(
                         tmp_file,
@@ -151,9 +201,28 @@ class TrainFiles:
                     )
                     hf.create_dataset(str(idx), data=example)
                     idx += 1
+                if len(frames_and_positions) > 0:
+                    _, y_pos, x_pos = frames_and_positions[
+                        np.random.choice(len(frames_and_positions) - 1)
+                    ]
+                    incomplete_frames, target_frames = self.get_incomplete_frames(
+                        tmp_file,
+                        y_pos,
+                        x_pos,
+                        kernel_size,
+                        kernel_size,
+                        n_pre,
+                        n_post,
+                    )
+                    for example, target in zip(incomplete_frames, target_frames):
+                        train_example_list.append(
+                            [str(idx), filepath, target, y_pos, x_pos]
+                        )
+                        hf.create_dataset(str(idx), data=example)
+                        idx += 1
                 print(f"Write to h5 file: {round(time.time()-start,4)}s")
             except:
-                print(f'Skipped file {filepath}')
+                print(f"Skipped file {filepath}")
             start = time.time()
         hf.close()
         self.train_examples = pd.DataFrame(
