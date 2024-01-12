@@ -1,5 +1,6 @@
 from model.unet import UNet
 import utils.normalization as normalization
+from utils.write_file import write_file
 from utils.open_file import open_file
 import torch
 import numpy as np
@@ -36,6 +37,7 @@ class ModelWrapper:
         self.load_weights(weights)
         self.model.to(self.device)
         # initalize image
+        self.denoised_img = np.empty((0, 0, 0))
         self.img = np.empty((0, 0, 0))
         self.img_height = -1
         self.img_width = -1
@@ -52,7 +54,7 @@ class ModelWrapper:
         self.model.load_state_dict(torch.load(weights))
         self.model.eval()
 
-    def load_img(self, img_path: str) -> None:
+    def load_and_normalize_img(self, img_path: str) -> None:
         """
         Load an image from the specified path, perform normalization, and store information about the image.
 
@@ -79,14 +81,14 @@ class ModelWrapper:
         - torch.Tensor: Input tensor for the U-Net model.
         """
         # extract frames
-        X = self.img[target - self.n_pre - 1 : target + self.n_post]  # ignore: warning
+        X = self.img[target - self.n_pre : target + self.n_post + 1]
         # remove target frame
         X = np.delete(X, self.n_pre, axis=0)
         # reshape to batch size 1
         X = X.reshape(1, self.n_pre + self.n_post, self.img_height, self.img_width)
         return torch.tensor(X, dtype=torch.float)
 
-    def denoise_img(self, img_path: str) -> np.ndarray:
+    def denoise_img(self, img_path: str) -> None:
         """
         Denoise an image sequence using the U-Net model.
 
@@ -97,16 +99,24 @@ class ModelWrapper:
         - np.ndarray: Denoised image sequence.
         """
         denoised_image_sequence = []
-        self.load_img(img_path)
+        self.load_and_normalize_img(img_path)
         for target in tqdm(
-            range(self.n_pre + 1, len(self.img) - self.n_post), desc="denoise"
+            range(self.n_pre, self.img.shape[0] - self.n_post), desc="denoise"
         ):
             X = self.get_prediction_frames(target).to(self.device)
             y_pred = np.array(self.model(X).detach().to("cpu")).reshape(
                 self.img_height, self.img_width
             )
             denoised_image_sequence.append(y_pred)
-        y_pred_grey_vals = normalization.reverse_z_norm(
+        self.denoised_img = normalization.reverse_z_norm(
             np.array(denoised_image_sequence), self.img_mean, self.img_std
         )
-        return y_pred_grey_vals
+        # tiff format is based on uint16 -> cast
+        self.denoised_img = self.denoised_img.astype(np.uint16)
+
+    def write_denoised_img(self, outpath: str) -> None:
+        if self.denoised_img.shape[0] == 0:
+            raise AssertionError(
+                f"Before writing a denoised image, first denoise image. Use <ModelWrapper>.denoise_img(<path/to/input_image>)."
+            )
+        write_file(self.denoised_img, outpath)
