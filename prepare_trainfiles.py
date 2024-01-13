@@ -50,11 +50,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--before",
+        type=int,
         default=0,
         help="Number of frames to add before a detected event, to also train to reconstruct the typical raise of the sensor. (default: 0)",
     )
     parser.add_argument(
         "--after",
+        type=int,
         default=0,
         help="Number of frames to add after a detected event, to also train to reconstruct the typical decay of the sensor. (default: 0)",
     )

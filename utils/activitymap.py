@@ -77,11 +77,15 @@ def get_frames_position(
         frame, y, x = example
         frames_w_pos.append([int(frame), int(y * kernelsize), int(x * kernelsize)])
         for i in range(1, before + 1):
+            if int(frame) - 1 < 0:
+                continue
             example_to_add = [int(frame) - i, int(y * kernelsize), int(x * kernelsize)]
             if example_to_add in frames_w_pos:
                 continue
             frames_w_pos.append(example_to_add)
         for i in range(1, after + 1):
+            if int(frame) + i >= img.shape[0]:
+                continue
             example_to_add = [int(frame) + i, int(y * kernelsize), int(x * kernelsize)]
             if example_to_add in frames_w_pos:
                 continue
