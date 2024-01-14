@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import h5py
-from tqdm import tqdm
+from alive_progress import alive_bar
 import utils.normalization as normalization
 from utils.activitymap import get_frames_position
 from utils.open_file import open_file
@@ -135,94 +135,100 @@ class TrainFiles:
         print(f"Found {len(files_to_do)} file(s).")
         import time
 
-        for filepath in tqdm(files_to_do, total=len(files_to_do)):
-            if (
-                self.train_examples[
-                    self.train_examples["original_filepath"] == filepath
-                ].shape[0]
-                > 0
-            ):
-                print(f"Skipepd {filepath} - already in h5 file.")
-                continue
-            try:
-                start = time.time()
-                tmp_file = open_file(filepath)
-                print(f"Opening file: {round(time.time()-start,4)}s")
-                start = time.time()
-                # find train examples with activity
-                tmp_file_rolling_normalization = normalization.rolling_window_z_norm(
-                    tmp_file, window_size
-                )
-                print(f"Rolling window normalization: {round(time.time()-start,4)}s")
-                start = time.time()
-                # will go through all frames and extract events that within a meaned kernel exceed the
-                # min_z_score threshold
-                # returns a list of events in the form [frame, y-coord, x-coord]
-                frames_and_positions = get_frames_position(
-                    tmp_file_rolling_normalization,
-                    min_z_score,
-                    before,
-                    after,
-                    kernel_size,
-                    roi_size,
-                    foreground_background_split,
-                )
-                print(f"Frames and positons: {round(time.time()-start,4)}s")
-                print(
-                    f"Found {len(frames_and_positions)} example(s) in file {filepath}"
-                )
-                start = time.time()
-                mean = np.mean(tmp_file, axis=0)
-                std = np.std(tmp_file, axis=0)
-                print(f"Mean and std: {round(time.time()-start,4)}s")
-                start = time.time()
-                tmp_file = normalization.z_norm(tmp_file, mean, std)
-                print(f"Normalization: {round(time.time()-start,4)}s")
-                start = time.time()
-                # create dict to be stored as h5 file
-                for event in frames_and_positions:
-                    target_frame, y_pos, x_pos = event
-                    if target_frame <= n_pre:
-                        continue
-                    if target_frame >= tmp_file.shape[0] - n_post:
-                        continue
-                    train_example_list.append(
-                        [str(idx), filepath, target_frame, y_pos, x_pos]
+        with alive_bar(len(files_to_do)) as bar:
+            for filepath in files_to_do:
+                if (
+                    self.train_examples[
+                        self.train_examples["original_filepath"] == filepath
+                    ].shape[0]
+                    > 0
+                ):
+                    print(f"Skipepd {filepath} - already in h5 file.")
+                    bar()
+                    continue
+                try:
+                    start = time.time()
+                    tmp_file = open_file(filepath)
+                    print(f"Opening file: {round(time.time()-start,4)}s")
+                    start = time.time()
+                    # find train examples with activity
+                    tmp_file_rolling_normalization = (
+                        normalization.rolling_window_z_norm(tmp_file, window_size)
                     )
-                    example = self.get_train_example(
-                        tmp_file,
-                        target_frame,
-                        y_pos,
-                        x_pos,
-                        kernel_size,
-                        kernel_size,
-                        n_pre,
-                        n_post,
+                    print(
+                        f"Rolling window normalization: {round(time.time()-start,4)}s"
                     )
-                    hf.create_dataset(str(idx), data=example)
-                    idx += 1
-                if len(frames_and_positions) > 0:
-                    _, y_pos, x_pos = frames_and_positions[
-                        np.random.choice(len(frames_and_positions) - 1)
-                    ]
-                    incomplete_frames, target_frames = self.get_incomplete_frames(
-                        tmp_file,
-                        y_pos,
-                        x_pos,
+                    start = time.time()
+                    # will go through all frames and extract events that within a meaned kernel exceed the
+                    # min_z_score threshold
+                    # returns a list of events in the form [frame, y-coord, x-coord]
+                    frames_and_positions = get_frames_position(
+                        tmp_file_rolling_normalization,
+                        min_z_score,
+                        before,
+                        after,
                         kernel_size,
-                        kernel_size,
-                        n_pre,
-                        n_post,
+                        roi_size,
+                        foreground_background_split,
                     )
-                    for example, target in zip(incomplete_frames, target_frames):
+                    print(f"Frames and positons: {round(time.time()-start,4)}s")
+                    print(
+                        f"Found {len(frames_and_positions)} example(s) in file {filepath}"
+                    )
+                    start = time.time()
+                    mean = np.mean(tmp_file, axis=0)
+                    std = np.std(tmp_file, axis=0)
+                    print(f"Mean and std: {round(time.time()-start,4)}s")
+                    start = time.time()
+                    tmp_file = normalization.z_norm(tmp_file, mean, std)
+                    print(f"Normalization: {round(time.time()-start,4)}s")
+                    start = time.time()
+                    # create dict to be stored as h5 file
+                    for event in frames_and_positions:
+                        target_frame, y_pos, x_pos = event
+                        if target_frame <= n_pre:
+                            continue
+                        if target_frame >= tmp_file.shape[0] - n_post:
+                            continue
                         train_example_list.append(
-                            [str(idx), filepath, target, y_pos, x_pos]
+                            [str(idx), filepath, target_frame, y_pos, x_pos]
+                        )
+                        example = self.get_train_example(
+                            tmp_file,
+                            target_frame,
+                            y_pos,
+                            x_pos,
+                            kernel_size,
+                            kernel_size,
+                            n_pre,
+                            n_post,
                         )
                         hf.create_dataset(str(idx), data=example)
                         idx += 1
-                print(f"Write to h5 file: {round(time.time()-start,4)}s")
-            except:
-                print(f"Skipped file {filepath}")
+                    if len(frames_and_positions) > 0:
+                        _, y_pos, x_pos = frames_and_positions[
+                            np.random.choice(len(frames_and_positions) - 1)
+                        ]
+                        incomplete_frames, target_frames = self.get_incomplete_frames(
+                            tmp_file,
+                            y_pos,
+                            x_pos,
+                            kernel_size,
+                            kernel_size,
+                            n_pre,
+                            n_post,
+                        )
+                        for example, target in zip(incomplete_frames, target_frames):
+                            train_example_list.append(
+                                [str(idx), filepath, target, y_pos, x_pos]
+                            )
+                            hf.create_dataset(str(idx), data=example)
+                            idx += 1
+                    print(f"Write to h5 file: {round(time.time()-start,4)}s")
+                    bar()
+                except:
+                    print(f"Skipped file {filepath}")
+                    bar()
             start = time.time()
         hf.close()
         self.train_examples = pd.DataFrame(
