@@ -61,11 +61,17 @@ class ModelWrapper:
         Parameters:
         - img_path (str): Path to the image file.
         """
-        self.img = open_file(img_path)
+        self.img: np.ndarray = open_file(img_path)
         _, self.img_height, self.img_width = self.img.shape
-        # normalization
+        # compute mean and std along z-axis
         self.img_mean: np.ndarray = np.mean(self.img, axis=0)
         self.img_std: np.ndarray = np.std(self.img, axis=0)
+        # interpolate frames before and after img for prediction -> no frames are lost in denoising
+        pre_frames = np.tile(self.img_mean.reshape(1,self.img_height,self.img_width), (self.n_pre,1,1))
+        after_frames = np.tile(self.img_mean.reshape(1,self.img_height,self.img_width), (self.n_post,1,1))
+        self.img = np.append(pre_frames,self.img, axis=0)
+        self.img = np.append(self.img, after_frames, axis=0)
+        # normalization
         self.img: np.ndarray = normalization.z_norm(
             self.img, self.img_mean, self.img_std
         )
