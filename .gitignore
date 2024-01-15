@@ -2,6 +2,9 @@
 *.pt
 # trainfile file (size limitations of github / unique to PC)
 trainfiles.csv
+# numpy files
+*.npy
+*.npz
 # nohup files
 nohup.out
 # example files from training
