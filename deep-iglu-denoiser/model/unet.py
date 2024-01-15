@@ -1,7 +1,6 @@
 import model.modelparts as modelparts
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class UNet(nn.Module):
@@ -11,6 +10,7 @@ class UNet(nn.Module):
     Parameters:
     - n_channels (int): Number of input channels.
     """
+
     def __init__(self, n_channels: int) -> None:
         """
         Initialize the U-Net model.
