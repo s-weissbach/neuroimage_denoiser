@@ -1,7 +1,7 @@
 from model.unet import UNet
 from utils.dataloader import DataLoader
 from utils.normalization import reverse_z_norm
-from utils.plot import plot_img
+from utils.plot import plot_img, plot_train_loss
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -95,5 +95,6 @@ def train(
             i += 1
         dataloader.shuffle_array()
     history = np.array(history)
+    plot_train_loss(history, f"example/train_loss.pdf")
     np.save(history_savepath, history)
     torch.save(model.state_dict(), modelpath)
