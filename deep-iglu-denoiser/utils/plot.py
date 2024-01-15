@@ -28,3 +28,18 @@ def plot_img(
     plt.clf()
     plt.cla()
     plt.close()
+
+def plot_train_loss(loss: np.ndarray[np.float64], savepath: str) -> None:
+    fig, ax = plt.subplots()
+    fig.set_size_inches(5, 4)
+    ax.plot(loss,color='#293241',lw=2)
+    for orientation in ["top", "right"]:
+        ax.spines[orientation].set_visible(False)
+    for orientation in ["bottom", "left"]:
+        ax.spines[orientation].set_linewidth(2)
+    ax.tick_params(axis='both', which='major', labelsize=15,width=3,length=10)
+    plt.tight_layout()
+    plt.savefig(savepath, bbox_inches = 'tight')
+    plt.clf()
+    plt.cla()
+    plt.close()
