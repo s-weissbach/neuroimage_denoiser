@@ -4,7 +4,7 @@ import h5py
 
 
 class DataLoader:
-    def __init__(self, train_h5: str, batch_size: int, target_frame: int):
+    def __init__(self, train_h5: str, batch_size: int,  noise_center: float = 0, noise_scale: float = 1.5):
         """
         Initialize the DataLoader.
 
@@ -17,7 +17,8 @@ class DataLoader:
         self.h5_file = h5py.File(train_h5, "r")
         self.train_samples = list(self.h5_file.keys())
         self.batch_size = batch_size
-        self.target_frame = target_frame
+        self.noise_center = noise_center
+        self.noise_scale = noise_scale
         self.epoch_done = False
         print(
             f"Found {len(self.train_samples)} samples to train. \n Batch size is {self.batch_size} -> {len(self.train_samples)//self.batch_size} iterations per epoch."
@@ -39,6 +40,11 @@ class DataLoader:
         self.available_train_examples = [
             self.train_samples[idx] for idx in random_order
         ]
+    
+    def add_gausian_noise(self, arr: np.ndarray) -> np.ndarray:
+        noise = np.random.normal(self.noise_center, self.noise_scale, size=arr.shape)
+        return np.add(arr,noise)
+
 
     def get_batch(self) -> bool:
         """
@@ -55,12 +61,11 @@ class DataLoader:
                 self.epoch_done = True
                 return False
             h5_idx = self.available_train_examples.pop(0)
-            X_tmp = np.array(self.h5_file.get(h5_idx))
-            self.y_list.append(
-                X_tmp[self.target_frame].reshape(1, X_tmp.shape[1], X_tmp.shape[2])
-            )
-            X_tmp = np.delete(X_tmp, self.target_frame, axis=0)
-            self.X_list.append(X_tmp)
+            y_tmp = np.array(self.h5_file.get(h5_idx))
+            X_tmp = self.add_gausian_noise(y_tmp.copy())
+            for target,frame in zip(y_tmp,X_tmp):
+                self.y_list.append(target.reshape(1, target.shape[0], target.shape[1]))
+                self.X_list.append(frame.reshape(1, frame.shape[0], frame.shape[1]))
         self.X = torch.tensor(np.array(self.X_list), dtype=torch.float)
         self.X_list = []
         self.y = torch.tensor(np.array(self.y_list), dtype=torch.float)

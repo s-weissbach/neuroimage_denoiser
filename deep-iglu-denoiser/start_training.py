@@ -36,31 +36,26 @@ def main() -> None:
     batch_size = trainconfig["batch_size"]
     learning_rate = trainconfig["learning_rate"]
     num_epochs = trainconfig["num_epochs"]
-    n_pre = trainconfig["n_pre"]
-    n_post = trainconfig["n_post"]
     path_example_img = trainconfig["path_example_img"]
     target_frame_example_img = trainconfig["target_frame_example_img"]
     predict_every_n_batches = trainconfig["predict_every_n_batches"]
+    noise_center = trainconfig["noise_center"]
+    noise_scale = trainconfig["noise_scale"]
 
-    dataloader = DataLoader(train_h5, batch_size, n_pre)
-    model = UNet(n_pre + n_post)
+    dataloader = DataLoader(train_h5, batch_size, noise_center, noise_scale)
+    model = UNet(1)
 
     if path_example_img != "":
-        if target_frame_example_img < n_pre:
-            raise ValueError(
-                "Target frame of example image must be bigger than n_pre. Adjust the settings in trainconfig.yaml"
-            )
+        
         example_img = open_file(path_example_img)
         example_img_target_frame = example_img[target_frame_example_img]
         mean = np.mean(example_img, axis=0)
         std = np.std(example_img, axis=0)
         example_img = z_norm(example_img, mean, std)
         example_img_pred_frames = example_img[
-            target_frame_example_img - n_pre - 1 : target_frame_example_img + n_post
+            target_frame_example_img
         ]
-        example_img_pred_frames = np.delete(
-            example_img_pred_frames, n_pre, axis=0
-        ).reshape(1, n_pre + n_post, example_img.shape[-2], example_img.shape[-1])
+        example_img_pred_frames = example_img_pred_frames.reshape(1, 1, example_img.shape[-2], example_img.shape[-1])
         train(
             model,
             dataloader,

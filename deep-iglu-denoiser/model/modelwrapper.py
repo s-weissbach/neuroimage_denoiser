@@ -17,7 +17,7 @@ class ModelWrapper:
     - n_post (int): Number of frames to use after the target frame.
     """
 
-    def __init__(self, weights: str, n_pre: int, n_post: int) -> None:
+    def __init__(self, weights: str, batch_size: int) -> None:
         """
         Initialize the ModelWrapper.
 
@@ -29,11 +29,10 @@ class ModelWrapper:
         - n_post (int): Number of frames to use after the target frame.
         """
         # initalize model
-        self.n_pre = n_pre
-        self.n_post = n_post
+        self.batch_size = batch_size
         # check for GPU, use CPU otherwise
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = UNet(self.n_pre + self.n_post)
+        self.model = UNet(1)
         self.load_weights(weights)
         self.model.to(self.device)
         # initalize image
@@ -66,17 +65,12 @@ class ModelWrapper:
         # compute mean and std along z-axis
         self.img_mean: np.ndarray = np.mean(self.img, axis=0)
         self.img_std: np.ndarray = np.std(self.img, axis=0)
-        # interpolate frames before and after img for prediction -> no frames are lost in denoising
-        pre_frames = np.tile(self.img_mean.reshape(1,self.img_height,self.img_width), (self.n_pre,1,1))
-        after_frames = np.tile(self.img_mean.reshape(1,self.img_height,self.img_width), (self.n_post,1,1))
-        self.img = np.append(pre_frames,self.img, axis=0)
-        self.img = np.append(self.img, after_frames, axis=0)
         # normalization
         self.img: np.ndarray = normalization.z_norm(
             self.img, self.img_mean, self.img_std
         )
 
-    def get_prediction_frames(self, target: int) -> torch.Tensor:
+    def get_prediction_frames(self, from_frame: int) -> torch.Tensor:
         """
         Extract frames around the target frame for making predictions.
 
@@ -86,12 +80,16 @@ class ModelWrapper:
         Returns:
         - torch.Tensor: Input tensor for the U-Net model.
         """
+        to_frame = min(len(self.img), from_frame + self.batch_size)
         # extract frames
-        X = self.img[target - self.n_pre : target + self.n_post + 1]
-        # remove target frame
-        X = np.delete(X, self.n_pre, axis=0)
+        X = self.img[from_frame:to_frame]
         # reshape to batch size 1
-        X = X.reshape(1, self.n_pre + self.n_post, self.img_height, self.img_width)
+        X = X.reshape(
+            min(self.batch_size, to_frame - from_frame),
+            1,
+            self.img_height,
+            self.img_width,
+        )
         return torch.tensor(X, dtype=torch.float)
 
     def denoise_img(self, img_path: str) -> None:
@@ -106,14 +104,15 @@ class ModelWrapper:
         """
         denoised_image_sequence = []
         self.load_and_normalize_img(img_path)
-        for target in tqdm(
-            range(self.n_pre, self.img.shape[0] - self.n_post), desc="denoise"
+        for from_frame in tqdm(
+            range(0, self.img.shape[0], self.batch_size), desc="denoise"
         ):
-            X = self.get_prediction_frames(target).to(self.device)
-            y_pred = np.array(self.model(X).detach().to("cpu")).reshape(
-                self.img_height, self.img_width
-            )
-            denoised_image_sequence.append(y_pred)
+            X = self.get_prediction_frames(from_frame).to(self.device)
+            y_pred = np.array(self.model(X).detach().to("cpu"))
+            for denoised_frame in y_pred:
+                denoised_image_sequence.append(
+                    denoised_frame.reshape(self.img_height, self.img_width)
+                )
         self.denoised_img = normalization.reverse_z_norm(
             np.array(denoised_image_sequence), self.img_mean, self.img_std
         )
