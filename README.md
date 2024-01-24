@@ -2,9 +2,11 @@
 
 The Deep iGlu Denoiser is a powerful tool designed for denoising microscopic recordings, offering pre-trained model weights for the **iGlu-Snfr3 sensor** ready to use. This denoising is built upon the [U-Net](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28) model architecture. The model can be trained on any microscopic data, without the need for manual data curation.
 
-**raw**                                            **denoised**
+| **raw**                                                             | denoised                                                                      |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| <img src="graphics/raw.gif" title="raw" alt="raw synapse" width="210"> | <img src="graphics/denoised.gif" title="denoised" alt="denoised synapse" width="210"> |
 
-<img src="graphics/raw.gif" title="" alt="raw synapse" width="209"> <img src="graphics/denoised.gif" title="" alt="denoised synapse" width="209">
+ 
 
 ## Getting started
 
@@ -110,7 +112,7 @@ If the csv-file and the h5-file exist, the new videos will be appended to the h5
 
 ## 2. Prepare config file
 
-Create a `trainconfig.yaml` file with the following configuration settings.
+<a "config> Create a `trainconfig.yaml` file with the following configuration settings. </a>
 
 ```yaml
 modelpath: 'unet.pt'
@@ -124,8 +126,6 @@ predict_every_n_batches: 10000
 noise_center: 0.0
 noise_scale: 1.5
 ```
-
-
 
 Adjust the paths and parameters in the configuration file based on your specific setup and requirements. This configuration file will be used during the training process to specify various parameters:
 
@@ -157,6 +157,6 @@ Run the training script by executing the following command:
 python start_training.py --trainconfigpath /path/to/trainconfig.yaml`
 ```
 
-`--trainconfigpath (-p)`: Path to the train config YAML file containing training parameters.
+`--trainconfigpath (-p)`: Path to the [train config YAML file](config) containing training parameters.
 
 When a CUDA capable GPU is found `GPU ready` will be printed; otherwise `Warning: only CPU found`. It is not recommended to train with a CPU only.
