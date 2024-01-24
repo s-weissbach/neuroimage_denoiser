@@ -102,7 +102,7 @@ Example usage:
 
 If the csv-file and the h5-file exist, the new videos will be appended to the h5 file. It is recommended to **backup the h5-file** before running this script.
 
-## <a name="config">2. Prepare config file</a>
+## 2. Prepare config file
 
 Create a `trainconfig.yaml` file with the following configuration settings.
 
@@ -149,6 +149,6 @@ Run the training script by executing the following command:
 python train_script.py --trainconfigpath /path/to/trainconfig.yaml`
 ```
 
-`--trainconfigpath (-p)`: Path to the [train config YAML file](config) containing training parameters.
+`--trainconfigpath (-p)`: Path to the [train config YAML file](2-Prepare-config-file) containing training parameters.
 
 When a CUDA capable GPU is found `GPU ready` will be printed; otherwise `Warning: only CPU found`. It is not recommended to train with a CPU only.
