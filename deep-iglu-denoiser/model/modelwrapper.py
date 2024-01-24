@@ -4,7 +4,6 @@ from utils.write_file import write_file
 from utils.open_file import open_file
 import torch
 import numpy as np
-from tqdm import tqdm
 
 
 class ModelWrapper:
@@ -104,9 +103,7 @@ class ModelWrapper:
         """
         denoised_image_sequence = []
         self.load_and_normalize_img(img_path)
-        for from_frame in tqdm(
-            range(0, self.img.shape[0], self.batch_size), desc="denoise"
-        ):
+        for from_frame in range(0, self.img.shape[0], self.batch_size):
             X = self.get_prediction_frames(from_frame).to(self.device)
             y_pred = np.array(self.model(X).detach().to("cpu"))
             for denoised_frame in y_pred:
