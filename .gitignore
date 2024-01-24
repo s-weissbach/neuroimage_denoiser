@@ -1,7 +1,7 @@
 # no pytorch weights (size limitations of github)
 *.pt
-# trainfile file (size limitations of github / unique to PC)
-trainfiles.csv
+# csv files
+*.csv
 # numpy files
 *.npy
 *.npz
