@@ -1,8 +1,8 @@
 import argparse
 import os
-from tqdm import tqdm
+from alive_progress import alive_bar
 from model.modelwrapper import ModelWrapper
-
+from utils.copy_folder_structure import copy_folder_structure
 
 def main(
     path: str, modelpath: str, directory_mode: str, outputpath: str, batch_size: int
@@ -20,28 +20,38 @@ def main(
     valid_fileendings = [".tif", ".tiff", ".stk", ".nd2"]
     # initalize model
     model = ModelWrapper(modelpath, batch_size)
-    if not directory_mode:
-        if not any([path.endswith(ending) for ending in valid_fileendings]):
-            raise NotImplementedError(
-                f"Fileending .{path.split('.')[-1]} is currently not implemented."
-            )
-        filelist = [path]
-    else:
+    if directory_mode:
+        # preserver original folderstructure
+        copy_folder_structure(path,outputpath)
         filelist = []
+        outputpaths = []
         for folderpath, _, filenames in os.walk(path):
             for filename in filenames:
                 if not any([filename.endswith(ending) for ending in valid_fileendings]):
                     continue
                 filelist.append(os.path.join(folderpath, filename))
-    for filepath in tqdm(filelist, total=len(filelist), desc="Image Denoising"):
-        filename = os.path.splitext(os.path.basename(filepath))[0]
-        outfilepath = os.path.join(outputpath, f"{filename}_denoised.tif")
-        if os.path.exists(outfilepath):
-            print(f"Skipped {filename}, because file already exists ({outfilepath}).")
-            continue
-        model.denoise_img(filepath)
-        model.write_denoised_img(outfilepath)
-        print(f"Saved image ({os.path.basename(filepath)}) as: {outfilepath}")
+                # preserver original folderstructure
+                outputpaths.append(os.path.join(outputpath,path.split(path)[1]))
+        
+    else:
+        if not any([path.endswith(ending) for ending in valid_fileendings]):
+            raise NotImplementedError(
+                f"Fileending .{path.split('.')[-1]} is currently not implemented."
+            )
+        filelist = [path]
+        outputpaths = [outputpath]
+    
+    with alive_bar(len(filelist)) as bar:
+        for filepath,outpath in zip(filelist,outputpaths):
+            filename = os.path.splitext(os.path.basename(filepath))[0]
+            outfilepath = os.path.join(outpath, f"{filename}_denoised.tif")
+            if os.path.exists(outfilepath):
+                print(f"Skipped {filename}, because file already exists ({outfilepath}).")
+                continue
+            model.denoise_img(filepath)
+            model.write_denoised_img(outfilepath)
+            print(f"Saved image ({os.path.basename(filepath)}) as: {outfilepath}")
+            bar()
 
 
 def parse_arguments():
