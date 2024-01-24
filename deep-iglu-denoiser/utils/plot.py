@@ -5,6 +5,15 @@ import numpy as np
 def plot_img(
     img: np.ndarray, savepath: str = "", vmin: float = -np.inf, vmax: float = np.inf
 ) -> None:
+    """
+    Plot an image using matplotlib.
+
+    Args:
+        img (np.ndarray): Input image array.
+        savepath (str, optional): If provided, save the plot to the specified path. Default is "".
+        vmin (float, optional): Minimum value for the colormap. Default is -np.inf.
+        vmax (float, optional): Maximum value for the colormap. Default is np.inf.
+    """
     fig, ax = plt.subplots()
     fig.set_size_inches(5, 5)
     if vmin != -np.inf:
@@ -30,6 +39,13 @@ def plot_img(
     plt.close()
 
 def plot_train_loss(loss: np.ndarray[np.float64], savepath: str) -> None:
+    """
+    Plot training loss over iterations.
+
+    Args:
+        loss (np.ndarray[np.float64]): Array of training loss values.
+        savepath (str): Path to save the plot.
+    """
     fig, ax = plt.subplots()
     fig.set_size_inches(5, 4)
     ax.plot(loss,color='#293241',lw=2)

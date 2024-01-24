@@ -2,44 +2,45 @@ import numpy as np
 from scipy.ndimage import uniform_filter1d
 
 
-def z_norm(img: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+def z_norm(img: np.ndarray[np.float64], mean: np.ndarray[np.float64], std: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
     """
     Pixelwise z-scaling for the image. z = (x-µ)/σ
 
     Parameters:
-    - img: Input image.
-    - mean: Mean matrix for scaling
-    - std: Standard deviation matrix for scaling.
+    - img (np.ndarray[np.float64]): Input image.
+    - mean (np.ndarray[np.float64]): Mean matrix for scaling
+    - std (np.ndarray[np.float64]): Standard deviation matrix for scaling.
 
     Returns:
-    - z-scaled image.
+        np.ndarray[np.float64]: z-scaled image.
     """
     return np.divide(np.subtract(img, mean), std)
 
-def moving_std(arr:np.ndarray[np.float64], start:int, end:int) -> np.ndarray[np.float64]:
+def moving_std(img: np.ndarray[np.float64], start:int, end:int) -> np.ndarray[np.float64]:
     """
-    Calculate the moving standard deviation for a specified range of frames.
+    Calculate the moving standard deviation of a numpy array within a specified range.
 
-    Parameters:
-    - parameters: Tuple containing the start and end indices.
+    Args:
+        arr (np.ndarray[np.float64]): Input array.
+        start (int): Starting index of the range.
+        end (int): Ending index of the range.
 
     Returns:
-    - np.ndarray: Moving standard deviation values.
+        np.ndarray[np.float64]: Moving standard deviation.
     """
-    std = np.std(arr[start:end], axis=0)
+    std = np.std(img[start:end], axis=0)
     return std
 
-def rolling_window_z_norm(img: np.ndarray, window_size: int):
+def rolling_window_z_norm(img: np.ndarray[np.int64], window_size: int) -> np.ndarray[np.float64]:
     """
     Apply rolling window z-scaling to an image sequence.
 
     Parameters:
-    - img: Input image sequence.
-    - window_size: Size of the rolling window.
-    - n_threads: Number of threads for parallel processing (default is 1).
+    - img (np.ndarray[np.float64]): Input image sequence.
+    - window_size (int): Size of the rolling window.
 
     Returns:
-    - np.ndarray: Z-scaled image sequence.
+        np.ndarray[np.float64]: Z-scaled image sequence.
     """
     before = window_size // 2
     after = window_size - before
@@ -53,16 +54,16 @@ def rolling_window_z_norm(img: np.ndarray, window_size: int):
     return normed_img
 
 
-def reverse_z_norm(img: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+def reverse_z_norm(img: np.ndarray[np.float64], mean: np.ndarray[np.float64], std: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
     """
     Reverse z-scaling for the image. x = z*σ+µ
 
     Parameters:
-    - img: Input image.
-    - mean: Mean matrix for scaling.
-    - std: Standard deviation matrix for scaling.
+    - img (np.ndarray[np.float64]): Input image.
+    - mean (np.ndarray[np.float64]): Mean matrix for scaling.
+    - std (np.ndarray[np.float64]): Standard deviation matrix for scaling.
 
     Returns:
-    - reversed z-scored image.
+        np.ndarray[np.float64]; reversed z-scored image.
     """
     return np.add(np.multiply(img, std), mean)

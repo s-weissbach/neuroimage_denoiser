@@ -7,6 +7,16 @@ from model.modelwrapper import ModelWrapper
 def main(
     path: str, modelpath: str, directory_mode: str, outputpath: str, batch_size: int
 ) -> None:
+    """
+    Main function for denoising images using a trained model.
+
+    Args:
+        path (str): Path to the input image or directory containing images.
+        modelpath (str): Path to the model weights.
+        directory_mode (str): Flag to enable directory mode (True/False).
+        outputpath (str): Path to the output directory.
+        batch_size (int): Number of frames predicted at once.
+    """
     valid_fileendings = [".tif", ".tiff", ".stk", ".nd2"]
     # initalize model
     model = ModelWrapper(modelpath, batch_size)
@@ -35,6 +45,12 @@ def main(
 
 
 def parse_arguments():
+    """
+    Parse command line arguments.
+
+    Returns:
+        argparse.Namespace: Parsed arguments.
+    """
     parser = argparse.ArgumentParser(description="Custom Argument Parser")
 
     parser.add_argument(
