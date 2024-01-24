@@ -3,6 +3,9 @@ from utils.trainfiles import TrainFiles
 
 
 def main() -> None:
+    """
+    Main function for preparing train files used for training a model.
+    """
     parser = argparse.ArgumentParser(description="Image Search Tool")
     # Required argument
     parser.add_argument(
@@ -23,11 +26,11 @@ def main() -> None:
     )
     # Optional arguments
     parser.add_argument(
-        "--kernel_size",
-        "-k",
+        "--crop_size",
+        "-c",
         type=int,
         default=32,
-        help="Kernel size for one patch of the image sequence (default: 32)",
+        help="Crop size used during training (default: 32)",
     )
     parser.add_argument(
         "--roi_size",
@@ -80,11 +83,12 @@ def main() -> None:
         default=False,
         help="Overwrite existing h5 file. If false, data will be appended. (default: False)",
     )
+    # parse arguments
     args = parser.parse_args()
     csv_path = args.csv
     folder_path = args.path
     file_endings = args.fileendings
-    kernel_size = args.kernel_size
+    crop_size = args.crop_size
     roi_size = args.roi_size
     min_z_score = args.min_z_score
     before = args.before
@@ -94,15 +98,17 @@ def main() -> None:
     output_h5_file = args.trainh5
     overwrite = args.overwrite
 
+    # initalize TrainFiles class
     trainfiles = TrainFiles(csv_path, overwrite)
 
+    # gather train data
     trainfiles.files_to_traindata(
         directory=folder_path,
         fileendings=file_endings,
         min_z_score=min_z_score,
         before=before,
         after=after,
-        kernel_size=kernel_size,
+        crop_size=crop_size,
         roi_size=roi_size,
         window_size=window_size,
         foreground_background_split=fg_split,

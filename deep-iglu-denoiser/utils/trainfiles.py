@@ -10,6 +10,13 @@ from utils.open_file import open_file
 
 class TrainFiles:
     def __init__(self, train_csv_path: str, overwrite: bool = False) -> None:
+        """
+        Initialize TrainFiles object.
+
+        Args:
+            train_csv_path (str): Path to the CSV file containing training examples information.
+            overwrite (bool, optional): If True, overwrite existing files. Default is False.
+        """
         self.train_csv_path = train_csv_path
         self.overwrite = overwrite
         self.file_list = {}
@@ -27,71 +34,13 @@ class TrainFiles:
             )
 
     def open_csv(self) -> None:
+        """
+        Open the CSV file containing training examples information.
+        """
         if os.path.exists(self.train_csv_path):
             self.train_examples = pd.read_csv(self.train_csv_path)
         else:
             print(f"CSV path not found: {self.train_csv_path}")
-
-    def get_incomplete_frames(
-        self,
-        img: np.ndarray,
-        y_pos: int,
-        x_pos: int,
-        height: int,
-        width: int,
-        n_pre: int,
-        n_post: int,
-    ) -> tuple[list[np.ndarray], list[int]]:
-        target_z_len = n_pre + n_post + 1
-        mean = np.mean(img, axis=0)
-        examples = []
-        target_frames = []
-        for target in range(n_pre):
-            example = img[
-                0 : target + n_post + 1, y_pos : y_pos + height, x_pos : x_pos + width
-            ]
-            frames_before = []
-            for _ in range(target_z_len - example.shape[0]):
-                frames_before.append(
-                    mean[y_pos : y_pos + height, x_pos : x_pos + width].copy()
-                )
-            frames_before = np.array(frames_before)
-            example = np.append(frames_before, example, axis=0)
-            examples.append(example)
-            target_frames.append(target)
-        for target in range(n_post):
-            example = img[
-                img.shape[0] - n_pre - (n_post - target) : img.shape[0],
-                y_pos : y_pos + height,
-                x_pos : x_pos + width,
-            ]
-            frames_after = []
-            for _ in range(target_z_len - example.shape[0]):
-                frames_after.append(
-                    mean[y_pos : y_pos + height, x_pos : x_pos + width].copy()
-                )
-            frames_after = np.array(frames_after)
-            example = np.append(example, frames_after, axis=0)
-            examples.append(example)
-            target_frames.append(img.shape[0] - (n_post - target))
-        return (examples, target_frames)
-
-    def get_train_example(
-        self,
-        img: np.ndarray,
-        target_frame: int,
-        y_pos: int,
-        x_pos: int,
-        height: int,
-        width: int,
-        n_pre: int,
-        n_post: int,
-    ) -> np.ndarray:
-        """
-        Extracts a single train example and crops it.
-        """
-        example = img[target_frame - n_pre : target_frame + n_post + 1]
-        return example[:, y_pos : y_pos + height, x_pos : x_pos + width]
 
     def files_to_traindata(
         self,
@@ -100,19 +49,31 @@ class TrainFiles:
         min_z_score: float,
         before: int,
         after: int,
-        kernel_size: int,
+        crop_size: int,
         roi_size: int,
         output_h5_file: str,
-        n_pre: int = 2,
-        n_post: int = 2,
-        window_size: int = 50,
+        normalization_window_size: int = 50,
         foreground_background_split: float = 0.1,
     ):
         """
-        Iterates through given directory and searches for all files having the specified fileendings. Opens these images and extracts active/inactive
-        patches (size: kernel_size) from the files (above/below min_z_score) and writes a single h5 file for training. active: foreground; inactive: background are
-        splitted according to foreground_background_split.
-        A train example consists of n_pre and n_post frames around the target frame.
+        Iterates through given directory and searches for all files having the specified fileendings.
+        Opens these images and extracts active/inactive patches (size: crop_size) from the files
+        (above/below min_z_score) and writes a single h5 file for training. active: foreground; inactive:
+        background are splitted according to foreground_background_split. A train example consists of n_pre
+        and n_post frames around the target frame.
+
+        Args:
+            directory (str): Directory containing image files.
+            fileendings (list[str]): List of file endings to consider.
+            min_z_score (float): Minimum Z-score threshold.
+            before (int): Number of frames before the target frame.
+            after (int): Number of frames after the target frame.
+            crop_size (int): Size of the crop used for training.
+            roi_size (int): Size of the region of interest.
+            output_h5_file (str): Path to the output H5 file.
+            window_size (int, optional): Size of the rolling window for normalization. Default is 50.
+            foreground_background_split (float, optional): Split ratio for foreground and background patches.
+                Default is 0.1.
         """
         train_example_list = []
         files_to_do = []
@@ -153,7 +114,7 @@ class TrainFiles:
                     start = time.time()
                     # find train examples with activity
                     tmp_file_rolling_normalization = (
-                        normalization.rolling_window_z_norm(tmp_file, window_size)
+                        normalization.rolling_window_z_norm(tmp_file, normalization_window_size)
                     )
                     print(
                         f"Rolling window normalization: {round(time.time()-start,4)}s"
@@ -167,7 +128,7 @@ class TrainFiles:
                         min_z_score,
                         before,
                         after,
-                        kernel_size,
+                        crop_size,
                         roi_size,
                         foreground_background_split,
                     )
@@ -175,6 +136,8 @@ class TrainFiles:
                     print(
                         f"Found {len(frames_and_positions)} example(s) in file {filepath}"
                     )
+                    if len(frames_and_positions) == 0:
+                        continue
                     start = time.time()
                     mean = np.mean(tmp_file, axis=0)
                     std = np.std(tmp_file, axis=0)
@@ -186,44 +149,12 @@ class TrainFiles:
                     # create dict to be stored as h5 file
                     for event in frames_and_positions:
                         target_frame, y_pos, x_pos = event
-                        if target_frame <= n_pre:
-                            continue
-                        if target_frame >= tmp_file.shape[0] - n_post:
-                            continue
                         train_example_list.append(
                             [str(idx), filepath, target_frame, y_pos, x_pos]
                         )
-                        example = self.get_train_example(
-                            tmp_file,
-                            target_frame,
-                            y_pos,
-                            x_pos,
-                            kernel_size,
-                            kernel_size,
-                            n_pre,
-                            n_post,
-                        )
+                        example = tmp_file[target_frame, y_pos : y_pos + crop_size, x_pos : x_pos + crop_size]
                         hf.create_dataset(str(idx), data=example)
                         idx += 1
-                    if len(frames_and_positions) > 0:
-                        _, y_pos, x_pos = frames_and_positions[
-                            np.random.choice(len(frames_and_positions) - 1)
-                        ]
-                        incomplete_frames, target_frames = self.get_incomplete_frames(
-                            tmp_file,
-                            y_pos,
-                            x_pos,
-                            kernel_size,
-                            kernel_size,
-                            n_pre,
-                            n_post,
-                        )
-                        for example, target in zip(incomplete_frames, target_frames):
-                            train_example_list.append(
-                                [str(idx), filepath, target, y_pos, x_pos]
-                            )
-                            hf.create_dataset(str(idx), data=example)
-                            idx += 1
                     print(f"Write to h5 file: {round(time.time()-start,4)}s")
                     bar()
                 except:
