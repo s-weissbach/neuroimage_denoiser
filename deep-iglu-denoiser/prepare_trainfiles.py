@@ -35,7 +35,7 @@ def main() -> None:
     parser.add_argument(
         "--roi_size",
         type=int,
-        default=8,
+        default=4,
         help="Expected ROI size; assumes for detection square of (roi_size x roi_size) (default: 8)",
     )
     parser.add_argument(
@@ -48,7 +48,7 @@ def main() -> None:
         "--min_z_score",
         "-z",
         type=float,
-        default=3.0,
+        default=2.0,
         help="Minimum Z score to be considered active patch (default: 4)",
     )
     parser.add_argument(
