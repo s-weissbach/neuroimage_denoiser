@@ -110,7 +110,7 @@ If the csv-file and the h5-file exist, the new videos will be appended to the h5
 
 ## 2. Prepare config file
 
-<a "config> Create a `trainconfig.yaml` file with the following configuration settings. </a>
+Create a `trainconfig.yaml` file with the following configuration settings.
 
 ```yaml
 modelpath: 'unet.pt'
@@ -157,6 +157,6 @@ Run the training script by executing the following command:
 python start_training.py --trainconfigpath /path/to/trainconfig.yaml`
 ```
 
-`--trainconfigpath (-p)`: Path to the [train config YAML file](config) containing training parameters.
+`--trainconfigpath (-p)`: Path to the train config YAML file containing training parameters.
 
 When a CUDA capable GPU is found `GPU ready` will be printed; otherwise `Warning: only CPU found`. It is not recommended to train with a CPU only.
