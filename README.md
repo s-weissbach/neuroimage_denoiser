@@ -40,6 +40,10 @@ Follow these steps to set up Deep iGlu Denoiser:
    ```
 
 ## Usage
+Activate the conda enviorment:
+```bash
+conda activate deep_iglu_denoiser
+```
 
 Run the following command to denoise images using the provided script:
 
