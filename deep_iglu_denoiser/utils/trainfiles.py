@@ -114,7 +114,9 @@ class TrainFiles:
                     start = time.time()
                     # find train examples with activity
                     tmp_file_rolling_normalization = (
-                        normalization.rolling_window_z_norm(tmp_file, normalization_window_size)
+                        normalization.rolling_window_z_norm(
+                            tmp_file, normalization_window_size
+                        )
                     )
                     print(
                         f"Rolling window normalization: {round(time.time()-start,4)}s"
@@ -152,7 +154,11 @@ class TrainFiles:
                         train_example_list.append(
                             [str(idx), filepath, target_frame, y_pos, x_pos]
                         )
-                        example = tmp_file[target_frame, y_pos : y_pos + crop_size, x_pos : x_pos + crop_size]
+                        example = tmp_file[
+                            target_frame,
+                            y_pos : y_pos + crop_size,
+                            x_pos : x_pos + crop_size,
+                        ]
                         hf.create_dataset(str(idx), data=example)
                         idx += 1
                     print(f"Write to h5 file: {round(time.time()-start,4)}s")

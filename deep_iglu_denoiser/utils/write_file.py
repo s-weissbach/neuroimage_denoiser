@@ -1,6 +1,7 @@
 import numpy as np
 import tifffile
 
+
 def write_file(img: np.ndarray[np.uint16], filepath: str) -> None:
     """
     Open and read an image file from the specified filepath.

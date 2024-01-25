@@ -6,26 +6,26 @@ The Deep iGlu Denoiser is a powerful tool designed for denoising microscopic rec
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | <img src="graphics/raw.gif" title="raw" alt="raw synapse" width="210"> | <img src="graphics/denoised.gif" title="denoised" alt="denoised synapse" width="210"> |
 
- 
+
 
 ## Getting started
 
 Follow these steps to set up Deep iGlu Denoiser:
 
 1. **Create a new enviorment:**
-   
+
    ```bash
    conda create -n deep_iglu_denoiser python=3.10 pip
    ```
 
 2. **Activate enviorment:**
-   
+
    ```bash
    conda activate deep_iglu_denoiser
    ```
 
 3. **Clone the repository:**
-   
+
    ```bash
    git clone https://github.com/s-weissbach/deep_iglu_denoiser.git
    ```
@@ -34,7 +34,7 @@ Follow these steps to set up Deep iGlu Denoiser:
    Download the pre-trained model from [the release page](https://github.com/s-weissbach/deep_iglu_denoiser/releases/) and place it in the project directory.
 
 5. **Install Requirements:**
-   
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -65,7 +65,7 @@ python denoise.py --path /path/to/images --modelpath /path/to/model_weights --di
 
 - Nikon format: `.nd2`
 
-All files will be written as a `.tiff`file. 
+All files will be written as a `.tiff`file.
 
 If you need other file formats to be supported, feel free to open an issue on GitHub.
 
@@ -135,7 +135,7 @@ Adjust the paths and parameters in the configuration file based on your specific
 
 - **modelpath**: Path to save the model after training.
 
-- **train_h5**: Path to the h5 file containing the training data 
+- **train_h5**: Path to the h5 file containing the training data
 
 - **batch_size**: Number of training examples utilized in one iteration (limited by the vRAM of your graphics card).
 
