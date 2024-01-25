@@ -4,6 +4,7 @@ from alive_progress import alive_bar
 from model.modelwrapper import ModelWrapper
 from utils.copy_folder_structure import copy_folder_structure
 
+
 def main(
     path: str, modelpath: str, directory_mode: str, outputpath: str, batch_size: int
 ) -> None:
@@ -19,17 +20,13 @@ def main(
     """
     valid_fileendings = [".tif", ".tiff", ".stk", ".nd2"]
     # ensure absolute path
-    print(outputpath)
     outputpath = os.path.abspath(outputpath)
-    print(outputpath)
-    print(path)
     path = os.path.abspath(path)
-    print(path)
     # initalize model
     model = ModelWrapper(modelpath, batch_size)
     if directory_mode:
         # preserver original folderstructure
-        copy_folder_structure(path,outputpath)
+        copy_folder_structure(path, outputpath)
         filelist = []
         outputpaths = []
         for folderpath, _, filenames in os.walk(path):
@@ -46,13 +43,15 @@ def main(
             )
         filelist = [path]
         outputpaths = [outputpath]
-    
+
     with alive_bar(len(filelist)) as bar:
-        for filepath,outpath in zip(filelist,outputpaths):
+        for filepath, outpath in zip(filelist, outputpaths):
             filename = os.path.splitext(os.path.basename(filepath))[0]
             outfilepath = os.path.join(outpath, f"{filename}_denoised.tif")
             if os.path.exists(outfilepath):
-                print(f"Skipped {filename}, because file already exists ({outfilepath}).")
+                print(
+                    f"Skipped {filename}, because file already exists ({outfilepath})."
+                )
                 continue
             model.denoise_img(filepath)
             model.write_denoised_img(outfilepath)

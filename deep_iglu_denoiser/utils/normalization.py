@@ -2,7 +2,11 @@ import numpy as np
 from scipy.ndimage import uniform_filter1d
 
 
-def z_norm(img: np.ndarray[np.float64], mean: np.ndarray[np.float64], std: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
+def z_norm(
+    img: np.ndarray[np.float64],
+    mean: np.ndarray[np.float64],
+    std: np.ndarray[np.float64],
+) -> np.ndarray[np.float64]:
     """
     Pixelwise z-scaling for the image. z = (x-µ)/σ
 
@@ -16,7 +20,10 @@ def z_norm(img: np.ndarray[np.float64], mean: np.ndarray[np.float64], std: np.nd
     """
     return np.divide(np.subtract(img, mean), std)
 
-def moving_std(img: np.ndarray[np.float64], start:int, end:int) -> np.ndarray[np.float64]:
+
+def moving_std(
+    img: np.ndarray[np.float64], start: int, end: int
+) -> np.ndarray[np.float64]:
     """
     Calculate the moving standard deviation of a numpy array within a specified range.
 
@@ -31,7 +38,10 @@ def moving_std(img: np.ndarray[np.float64], start:int, end:int) -> np.ndarray[np
     std = np.std(img[start:end], axis=0)
     return std
 
-def rolling_window_z_norm(img: np.ndarray[np.int64], window_size: int) -> np.ndarray[np.float64]:
+
+def rolling_window_z_norm(
+    img: np.ndarray[np.int64], window_size: int
+) -> np.ndarray[np.float64]:
     """
     Apply rolling window z-scaling to an image sequence.
 
@@ -44,7 +54,7 @@ def rolling_window_z_norm(img: np.ndarray[np.int64], window_size: int) -> np.nda
     """
     before = window_size // 2
     after = window_size - before
-    mean = uniform_filter1d(img,window_size,axis=0,mode='constant')
+    mean = uniform_filter1d(img, window_size, axis=0, mode="constant")
     std = []
     for idx in range(img.shape[0]):
         start = max(0, idx - before)
@@ -54,7 +64,11 @@ def rolling_window_z_norm(img: np.ndarray[np.int64], window_size: int) -> np.nda
     return normed_img
 
 
-def reverse_z_norm(img: np.ndarray[np.float64], mean: np.ndarray[np.float64], std: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
+def reverse_z_norm(
+    img: np.ndarray[np.float64],
+    mean: np.ndarray[np.float64],
+    std: np.ndarray[np.float64],
+) -> np.ndarray[np.float64]:
     """
     Reverse z-scaling for the image. x = z*σ+µ
 

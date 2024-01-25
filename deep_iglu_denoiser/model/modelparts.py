@@ -11,6 +11,7 @@ class UnetConvBlock(nn.Module):
     - in_channels (int): Number of input channels.
     - out_channels (int): Number of output channels.
     """
+
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__()
         self.conv_block = nn.Sequential(
@@ -43,6 +44,7 @@ class Down(nn.Module):
     - in_channels: Number of input channels.
     - out_channels: Number of output channels.
     """
+
     def __init__(self, in_channels, out_channels) -> None:
         super().__init__()
         self.unet_down_block = nn.Sequential(
@@ -70,6 +72,7 @@ class Up(nn.Module):
     - in_channels (int): Number of input channels.
     - out_channels (int): Number of output channels.
     """
+
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__()
         self.up = nn.ConvTranspose2d(
