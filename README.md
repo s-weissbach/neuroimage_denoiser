@@ -101,7 +101,7 @@ Use the `prepare_trainfiles.py` script to generate training data from a set of i
 - `--crop_size (-c)`: Crop size used during training (default: 32).
 - `--roi_size`: Expected ROI size; assumes for detection square of (roi_size x roi_size) (default: 4).
 - `--trainh5 (-t)`: Path to the output H5 file that will be created.
-- `--min_z_score (-z)`: Minimum Z score to be considered an active patch (default: 2).
+- `--min_z_score (-z)`: Minimum Z score to be considered an active ROI (default: 2).
 - `--before`: Number of frames to add before a detected event, to also train to reconstruct the typical raise of the sensor's signal (default: 0).
 - `--after`: Number of frames to add after a detected event, to also train to reconstruct the typical decay of the sensor's signal (default: 0).
 - `--window_size (-w)`: Number of frames used for rolling window z-normalization (default: 50).
