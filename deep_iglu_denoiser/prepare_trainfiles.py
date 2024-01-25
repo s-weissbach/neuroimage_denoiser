@@ -49,7 +49,7 @@ def main() -> None:
         "-z",
         type=float,
         default=2.0,
-        help="Minimum Z score to be considered active patch (default: 4)",
+        help="Minimum Z score to be considered active patch (default: 2)",
     )
     parser.add_argument(
         "--before",
