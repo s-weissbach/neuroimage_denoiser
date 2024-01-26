@@ -20,6 +20,7 @@ The Deep iGlu Denoiser is a powerful tool designed for denoising microscopic rec
 | <img src="graphics/raw.gif" title="raw" alt="raw synapse" width="210"> | <img src="graphics/denoised.gif" title="denoised" alt="denoised synapse" width="210"> |
 
 The Deep iGlu Denoiser maintains the amplitude heights and therefore does not alter subsequent analysis. 
+
 <img src="graphics/correlation_analysis.jp2" title="correlation" alt="correlation raw amplitudes to denoised amplitutes" width="420">
 
 ## Getting started
