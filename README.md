@@ -94,15 +94,13 @@ To train a custom model for denoising, follow these steps:
 
 > [!WARNING]
 > Potentially uses a lot of RAM. If you have limited RAM capicity use `--memory_optimized`
-
-
-Store all recordings with **one sensor** and store them in a directory `/path/to/traindata/`.
 > [!NOTE]
 > The recordings itself can be noisy.
 
+Prepare the creation by storing all recordings with **one sensor** in a directory `/path/to/traindata/`.
+
 Use the `prepare_trainfiles.py` script to generate training data from a set of images. The script takes the following arguments:
 
-- `--csv`: Output CSV file containing meta information for training examples.
 - `--path (-p)`: Path to the folder containing images.
 - `--fileendings (-f)`: List of file endings to consider.
 - `--crop_size (-c)`: Crop size used during training (default: 32).
