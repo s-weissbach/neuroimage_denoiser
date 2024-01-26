@@ -1,5 +1,5 @@
 import argparse
-from utils.trainfiles import TrainFiles
+from deep_iglu_denoiser.utils.trainfiles import TrainFiles
 
 
 def main() -> None:

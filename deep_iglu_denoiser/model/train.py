@@ -1,7 +1,7 @@
-from model.unet import UNet
-from utils.dataloader import DataLoader
-from utils.normalization import reverse_z_norm
-from utils.plot import plot_img, plot_train_loss
+from deep_iglu_denoiser.model.unet import UNet
+from deep_iglu_denoiser.utils.dataloader import DataLoader
+from deep_iglu_denoiser.utils.normalization import reverse_z_norm
+from deep_iglu_denoiser.utils.plot import plot_img, plot_train_loss
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

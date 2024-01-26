@@ -1,8 +1,8 @@
 import argparse
 import os
 from alive_progress import alive_bar
-from model.modelwrapper import ModelWrapper
-from utils.copy_folder_structure import copy_folder_structure
+from deep_iglu_denoiser.model.modelwrapper import ModelWrapper
+from deep_iglu_denoiser.utils.copy_folder_structure import copy_folder_structure
 
 
 def main(

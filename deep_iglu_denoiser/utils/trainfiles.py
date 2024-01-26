@@ -3,12 +3,11 @@ import pandas as pd
 import numpy as np
 import h5py
 from alive_progress import alive_bar
-import utils.normalization as normalization
-from utils.activitymap import get_frames_position
-from utils.open_file import open_file
+import deep_iglu_denoiser.utils.normalization as normalization
+from deep_iglu_denoiser.utils.activitymap import get_frames_position
+from deep_iglu_denoiser.utils.open_file import open_file
 
 import time
-import psutil
 
 
 class TrainFiles:
@@ -23,14 +22,6 @@ class TrainFiles:
         self.train_csv_path = train_csv_path
         self.overwrite = overwrite
         self.file_list = {}
-
-        # benchmarking
-        self.time_samples = []
-        self.memory_exponent = 2**30
-        self.total_memory = round(
-            psutil.virtual_memory().total / self.memory_exponent, 2
-        )
-        self.time_samples = []
 
         if os.path.exists(self.train_csv_path):
             self.open_csv()
@@ -53,29 +44,6 @@ class TrainFiles:
             self.train_examples = pd.read_csv(self.train_csv_path)
         else:
             print(f"CSV path not found: {self.train_csv_path}")
-
-    def sample_time_memory(self, desc: str):
-        used = round(psutil.virtual_memory().used / self.memory_exponent, 2)
-        self.time_samples.append(
-            {
-                "step": desc,
-                "time": time.time(),
-                "memory": used,
-            }
-        )
-
-    def print_time_samples(self):
-        if len(self.time_samples) < 2:
-            print("Not enough time samples were recorded")
-        for idx in range(1, len(self.time_samples)):
-            time_sample = self.time_samples[idx]
-            print(
-                (
-                    f"{time_sample['step']}: "
-                    f"{round(time_sample['time'] - self.time_samples[idx - 1]['time'], 0)}s"
-                    f" | {time_sample['memory']}/{self.total_memory}"
-                )
-            )
 
     def files_to_traindata(
         self,

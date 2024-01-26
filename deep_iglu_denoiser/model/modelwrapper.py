@@ -1,7 +1,7 @@
-from model.unet import UNet
-import utils.normalization as normalization
-from utils.write_file import write_file
-from utils.open_file import open_file
+from deep_iglu_denoiser.model.unet import UNet
+import deep_iglu_denoiser.utils.normalization as normalization
+from deep_iglu_denoiser.utils.write_file import write_file
+from deep_iglu_denoiser.utils.open_file import open_file
 import torch
 import numpy as np
 
