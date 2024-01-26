@@ -7,6 +7,9 @@ import utils.normalization as normalization
 from utils.activitymap import get_frames_position
 from utils.open_file import open_file
 
+import time
+import psutil
+
 
 class TrainFiles:
     def __init__(self, train_csv_path: str, overwrite: bool = False) -> None:
@@ -20,6 +23,13 @@ class TrainFiles:
         self.train_csv_path = train_csv_path
         self.overwrite = overwrite
         self.file_list = {}
+
+        # benchmarking
+        self.time_samples = []
+        self.memory_exponent = 2**30
+        self.total_memory = round(psutil.virtual_memory().total / self.memory_exponent, 2)
+        self.time_samples = []
+
         if os.path.exists(self.train_csv_path):
             self.open_csv()
         else:
@@ -42,6 +52,22 @@ class TrainFiles:
         else:
             print(f"CSV path not found: {self.train_csv_path}")
 
+    def sample_time_memory(self, desc: str):
+        used = round(psutil.virtual_memory().used / self.memory_exponent, 2)
+        self.time_samples.append({'step': desc, 'time': time.time(), 'memory': used, })
+
+    def print_time_samples(self):
+        if len(self.time_samples) < 2:
+            print('Not enough time samples were recorded')
+        for idx in range(1, len(self.time_samples)):
+            time_sample = self.time_samples[idx]
+            print((
+                    f"{time_sample['step']}: "
+                    f"{round(time_sample['time'] - self.time_samples[idx - 1]['time'], 0)}s"
+                    f" | {time_sample['memory']}/{self.total_memory}"
+                )
+            )
+
     def files_to_traindata(
         self,
         directory: str,
@@ -52,8 +78,9 @@ class TrainFiles:
         crop_size: int,
         roi_size: int,
         output_h5_file: str,
-        normalization_window_size: int = 50,
+        window_size: int = 50,
         foreground_background_split: float = 0.1,
+        memory_optimized=False,
     ):
         """
         Iterates through given directory and searches for all files having the specified fileendings.
@@ -77,11 +104,15 @@ class TrainFiles:
         """
         train_example_list = []
         files_to_do = []
+
+        # find files recursively
         for root, _, files in os.walk(directory):
             for file in files:
                 if not any([file.endswith(ending) for ending in fileendings]):
                     continue
                 files_to_do.append(os.path.join(root, file))
+        print(f"Found {len(files_to_do)} file(s).")
+
         if os.path.exists(output_h5_file) and not self.overwrite:
             print("Found existing h5-file. Will append.")
             hf = h5py.File(output_h5_file, "w")
@@ -93,83 +124,189 @@ class TrainFiles:
         else:
             hf = h5py.File(output_h5_file, "w")
             idx = 0
-        print(f"Found {len(files_to_do)} file(s).")
-        import time
 
         with alive_bar(len(files_to_do)) as bar:
             for filepath in files_to_do:
-                if (
-                    self.train_examples[
-                        self.train_examples["original_filepath"] == filepath
-                    ].shape[0]
-                    > 0
-                ):
-                    print(f"Skipepd {filepath} - already in h5 file.")
+                if (self.train_examples[self.train_examples["original_filepath"] == filepath].shape[0] > 0):
+                    print(f"Skipped {filepath} - already in h5 file.")
                     bar()
                     continue
-                try:
-                    start = time.time()
-                    tmp_file = open_file(filepath)
-                    print(f"Opening file: {round(time.time()-start,4)}s")
-                    start = time.time()
-                    # find train examples with activity
-                    tmp_file_rolling_normalization = (
-                        normalization.rolling_window_z_norm(
-                            tmp_file, normalization_window_size
-                        )
+
+                if memory_optimized:
+                    idx = self.handle_file_memory_optimized(
+                            idx,
+                            train_example_list,
+                            filepath,
+                            hf,
+                            directory,
+                            min_z_score,
+                            before,
+                            after,
+                            crop_size,
+                            roi_size,
+                            output_h5_file,
+                            window_size,
+                            foreground_background_split,
                     )
-                    print(
-                        f"Rolling window normalization: {round(time.time()-start,4)}s"
+                else:
+                    idx = self.handle_file(
+                            idx,
+                            train_example_list,
+                            filepath,
+                            hf,
+                            directory,
+                            min_z_score,
+                            before,
+                            after,
+                            crop_size,
+                            roi_size,
+                            output_h5_file,
+                            window_size,
+                            foreground_background_split,
                     )
-                    start = time.time()
-                    # will go through all frames and extract events that within a meaned kernel exceed the
-                    # min_z_score threshold
-                    # returns a list of events in the form [frame, y-coord, x-coord]
-                    frames_and_positions = get_frames_position(
-                        tmp_file_rolling_normalization,
-                        min_z_score,
-                        before,
-                        after,
-                        crop_size,
-                        roi_size,
-                        foreground_background_split,
-                    )
-                    print(f"Frames and positons: {round(time.time()-start,4)}s")
-                    print(
-                        f"Found {len(frames_and_positions)} example(s) in file {filepath}"
-                    )
-                    if len(frames_and_positions) == 0:
-                        continue
-                    start = time.time()
-                    mean = np.mean(tmp_file, axis=0)
-                    std = np.std(tmp_file, axis=0)
-                    print(f"Mean and std: {round(time.time()-start,4)}s")
-                    start = time.time()
-                    tmp_file = normalization.z_norm(tmp_file, mean, std)
-                    print(f"Normalization: {round(time.time()-start,4)}s")
-                    start = time.time()
-                    # create dict to be stored as h5 file
-                    for event in frames_and_positions:
-                        target_frame, y_pos, x_pos = event
-                        train_example_list.append(
-                            [str(idx), filepath, target_frame, y_pos, x_pos]
-                        )
-                        example = tmp_file[
-                            target_frame,
-                            y_pos : y_pos + crop_size,
-                            x_pos : x_pos + crop_size,
-                        ]
-                        hf.create_dataset(str(idx), data=example)
-                        idx += 1
-                    print(f"Write to h5 file: {round(time.time()-start,4)}s")
-                    bar()
-                except:
-                    print(f"Skipped file {filepath}")
-                    bar()
-            start = time.time()
+                bar()
+
+        if memory_optimized:
+            os.remove(os.path.join(directory, 'mmap_time_file.npy'))
+            os.remove(os.path.join(directory, 'mmap_time_znorm_file.npy'))
+            os.remove(os.path.join(directory, 'mmap_std.npy'))
+            os.remove(os.path.join(directory, 'mmap_mean.npy'))
+
         hf.close()
+
         self.train_examples = pd.DataFrame(
             train_example_list,
             columns=["h5_idx", "original_filepath", "target_frame", "y_pos", "x_pos"],
         )
         self.train_examples.to_csv(self.train_csv_path)
+
+    def handle_file(
+        self,
+        idx: int,
+        train_example_list: pd.DataFrame,
+        filepath: str,
+        hf: h5py.File,
+        directory: str,
+        min_z_score: float,
+        before: int,
+        after: int,
+        crop_size: int,
+        roi_size: int,
+        output_h5_file: str,
+        window_size: int = 50,
+        foreground_background_split: float = 0.1,
+    ):
+        file = open_file(filepath)
+        # find train examples with activity
+        file_znorm = normalization.rolling_window_z_norm(file, window_size)
+
+        # will go through all frames and extract events that within a meaned kernel exceed the
+        # min_z_score threshold
+        # returns a list of events in the form [frame, y-coord, x-coord]
+        frames_and_positions = get_frames_position(
+            file_znorm,
+            min_z_score,
+            before,
+            after,
+            crop_size,
+            roi_size,
+            foreground_background_split,
+        )
+
+        if len(frames_and_positions) == 0:
+            return idx
+
+        mean = np.mean(file, axis=0)
+        std = np.std(file, axis=0)
+        file = normalization.z_norm(file, mean, std)
+
+        # create dict to be stored as h5 file
+        for event in frames_and_positions:
+            target_frame, y_pos, x_pos = event
+            train_example_list.append(
+                [str(idx), filepath, target_frame, y_pos, x_pos]
+            )
+            example = file[
+                target_frame,
+                y_pos: y_pos + crop_size,
+                x_pos: x_pos + crop_size,
+            ]
+            hf.create_dataset(str(idx), data=example)
+            idx += 1
+
+    def handle_file_memory_optimized(
+        self,
+        idx: int,
+        train_example_list: pd.DataFrame,
+        filepath: str,
+        hf: h5py.File,
+        directory: str,
+        min_z_score: float,
+        before: int,
+        after: int,
+        crop_size: int,
+        roi_size: int,
+        output_h5_file: str,
+        window_size: int = 50,
+        foreground_background_split: float = 0.1,
+    ):
+        file = open_file(filepath)
+        # -- numpy memmaps --
+        mmap_file_path = os.path.join(directory, 'mmap_time_file.npy')
+        file_shape = file.shape
+        np.save(mmap_file_path, file)
+        # wrap memmap around file on disk
+        mmap_file = np.memmap(mmap_file_path, dtype='float64', mode='w+', shape=file_shape)
+        mmap_file[:] = file[:]
+        # clear ram by removing file
+        del file
+        # flush mmap to disk
+        mmap_file.flush()
+
+        mmap_znorm_file_path = os.path.join(directory, 'mmap_time_znorm_file.npy')
+        # wrap memmap around file on disk
+        mmap_znorm_file = np.memmap(mmap_znorm_file_path, dtype='float64', mode='w+', shape=file_shape)
+        # find train examples with activity
+        znorm_file = normalization.rolling_window_z_norm_memory_optimized(mmap_file, window_size, directory)
+        mmap_znorm_file[:] = znorm_file[:]
+        # flush mmap to disk
+        del znorm_file
+        mmap_znorm_file.flush()
+
+        # will go through all frames and extract events that within a meaned kernel exceed the
+        # min_z_score threshold
+        # returns a list of events in the form [frame, y-coord, x-coord]
+        frames_and_positions = get_frames_position(
+            mmap_znorm_file,
+            min_z_score,
+            before,
+            after,
+            crop_size,
+            roi_size,
+            foreground_background_split,
+        )
+
+        print(f"Found {len(frames_and_positions)} example(s) in file {filepath}")
+
+        if len(frames_and_positions) == 0:
+            return idx
+
+        mean = np.mean(mmap_file, axis=0)
+        std = np.std(mmap_file, axis=0)
+
+        mmap_file[:] = normalization.z_norm(mmap_file, mean, std)[:]
+
+        # create dict to be stored as h5 file
+        for event in frames_and_positions:
+            target_frame, y_pos, x_pos = event
+            train_example_list.append(
+                [str(idx), filepath, target_frame, y_pos, x_pos]
+            )
+            example = mmap_file[
+                target_frame,
+                y_pos: y_pos + crop_size,
+                x_pos: x_pos + crop_size,
+            ]
+            hf.create_dataset(str(idx), data=example)
+            idx += 1
+        return idx

@@ -83,6 +83,12 @@ def main() -> None:
         default=False,
         help="Overwrite existing h5 file. If false, data will be appended. (default: False)",
     )
+    parser.add_argument(
+        "--memory_optimized",
+        type=bool,
+        default=False,
+        help="Utilize optimized memory mode. Trades speed for lower memory usage"
+    )
     # parse arguments
     args = parser.parse_args()
     csv_path = args.csv
@@ -97,6 +103,7 @@ def main() -> None:
     fg_split = args.fgsplit
     output_h5_file = args.trainh5
     overwrite = args.overwrite
+    memory_optimized = args.memory_optimized
 
     # initalize TrainFiles class
     trainfiles = TrainFiles(csv_path, overwrite)
@@ -113,6 +120,7 @@ def main() -> None:
         window_size=window_size,
         foreground_background_split=fg_split,
         output_h5_file=output_h5_file,
+        memory_optimized=memory_optimized,
     )
 
 
