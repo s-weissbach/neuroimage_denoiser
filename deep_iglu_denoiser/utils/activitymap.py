@@ -96,6 +96,8 @@ def get_frames_position(
         # stimulation responses
         for stimulation in stimulationframes:
             for frame_after_stimulation in range(stimulation, stimulation + n_frames):
+                if frame_after_stimulation >= img.shape[0]:
+                    continue
                 example_to_add = [
                     frame_after_stimulation,
                     int(y * cropsize),
