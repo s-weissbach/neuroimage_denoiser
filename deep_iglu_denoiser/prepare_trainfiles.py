@@ -9,12 +9,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Image Search Tool")
     # Required argument
     parser.add_argument(
-        "--csv",
-        required=True,
-        help="Output csv file, that holds meta information to the train examples in h5 file",
-    )
-
-    parser.add_argument(
         "--path", "-p", required=True, help="Path to folder containing images"
     )
     parser.add_argument(
@@ -99,14 +93,13 @@ def main() -> None:
     )
     # parse arguments
     args = parser.parse_args()
-    csv_path = args.csv
     folder_path = args.path
     file_endings = args.fileendings
     crop_size = args.crop_size
     roi_size = args.roi_size
     min_z_score = args.min_z_score
-    before = args.before
-    after = args.after
+    frames_before_event = args.before
+    frames_after_event = args.after
     window_size = args.window_size
     stimulationframes = (
         [int(frame) for frame in args.stimulationframes]
@@ -120,22 +113,24 @@ def main() -> None:
     memory_optimized = args.memory_optimized
 
     # initalize TrainFiles class
-    trainfiles = TrainFiles(csv_path, overwrite)
-
-    # gather train data
-    trainfiles.files_to_traindata(
-        directory=folder_path,
+    trainfiles = TrainFiles(
         fileendings=file_endings,
         min_z_score=min_z_score,
-        before=before,
-        after=after,
+        frames_before_event=frames_before_event,
+        frames_after_event=frames_after_event,
         crop_size=crop_size,
         roi_size=roi_size,
+        output_h5_file=output_h5_file,
         window_size=window_size,
         stimulationframes=stimulationframes,
         n_frames=n_frames,
         foreground_background_split=fg_split,
-        output_h5_file=output_h5_file,
+        overwrite=overwrite,
+    )
+
+    # gather train data
+    trainfiles.files_to_traindata(
+        directory=folder_path,
         memory_optimized=memory_optimized,
     )
 
