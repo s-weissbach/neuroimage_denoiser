@@ -108,7 +108,7 @@ def main() -> None:
     before = args.before
     after = args.after
     window_size = args.window_size
-    stimulationframes = args.stimulationframes
+    stimulationframes = [int(frame) for frame in args.stimulationframes]
     n_frames = args.n_frames
     fg_split = args.fgsplit
     output_h5_file = args.trainh5
