@@ -107,6 +107,7 @@ Use the `prepare_trainfiles.py` script to generate training data from a set of i
 - `--window_size (-w)`: Number of frames used for rolling window z-normalization (default: 50).
 - `--fgsplit (-s)`: Foreground to background split (default: 0.5).
 - `--overwrite`: Overwrite existing H5 file. If false, data will be appended (default: False).
+- `--memory_optimized`: Execute preparation process with optimized memory usage. Increases execution time. (default: False).
 
 Example usage:
 

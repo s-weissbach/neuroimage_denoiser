@@ -1,9 +1,9 @@
 import argparse
-from utils.open_file import open_file
-from utils.normalization import z_norm
-from utils.dataloader import DataLoader
-from model.unet import UNet
-from model.train import train
+from deep_iglu_denoiser.utils.open_file import open_file
+from deep_iglu_denoiser.utils.normalization import z_norm
+from deep_iglu_denoiser.utils.dataloader import DataLoader
+from deep_iglu_denoiser.model.unet import UNet
+from deep_iglu_denoiser.model.train import train
 
 import torch
 import yaml

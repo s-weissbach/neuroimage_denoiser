@@ -1,4 +1,4 @@
-import model.modelparts as modelparts
+import deep_iglu_denoiser.model.modelparts as modelparts
 import torch
 import torch.nn as nn
 
