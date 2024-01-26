@@ -40,7 +40,7 @@ Follow these steps to set up Deep iGlu Denoiser:
    git clone https://github.com/s-weissbach/deep_iglu_denoiser.git
    ```
 
-3. **Download re-trained model:**
+3. **Download pre-trained model:**
    Download the pre-trained model from [the release page](https://github.com/s-weissbach/deep_iglu_denoiser/releases/) and place it in the project directory.
 
 4. **Install requirements:**
