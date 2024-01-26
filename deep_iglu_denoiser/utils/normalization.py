@@ -4,10 +4,10 @@ from scipy.ndimage import uniform_filter1d
 
 
 def z_norm(
-    img: np.ndarray[np.float64],
-    mean: np.ndarray[np.float64],
-    std: np.ndarray[np.float64],
-) -> np.ndarray[np.float64]:
+    img: np.ndarray,
+    mean: np.ndarray,
+    std: np.ndarray,
+) -> np.ndarray:
     """
     Pixelwise z-scaling for the image. z = (x-µ)/σ
 
@@ -22,9 +22,7 @@ def z_norm(
     return np.divide(np.subtract(img, mean), std)
 
 
-def moving_std(
-    img: np.ndarray[np.float64], start: int, end: int
-) -> np.ndarray[np.float64]:
+def moving_std(img: np.ndarray, start: int, end: int) -> np.ndarray:
     """
     Calculate the moving standard deviation of a numpy array within a specified range.
 
@@ -40,9 +38,9 @@ def moving_std(
 
 
 def rolling_window_z_norm(
-    img: np.ndarray[np.int64],
+    img: np.ndarray,
     window_size: int,
-) -> np.ndarray[np.float64]:
+) -> np.ndarray:
     """
     Apply rolling window z-scaling to an image sequence.
 
@@ -65,10 +63,10 @@ def rolling_window_z_norm(
 
 
 def rolling_window_z_norm_memory_optimized(
-    img: np.ndarray[np.int64],
+    img: np.ndarray,
     window_size: int,
     base_dir: str,
-) -> np.ndarray[np.float64]:
+) -> np.ndarray:
     """
     Apply rolling window z-scaling to an image sequence.
 
@@ -102,10 +100,10 @@ def rolling_window_z_norm_memory_optimized(
 
 
 def reverse_z_norm(
-    img: np.ndarray[np.float64],
-    mean: np.ndarray[np.float64],
-    std: np.ndarray[np.float64],
-) -> np.ndarray[np.float64]:
+    img: np.ndarray,
+    mean: np.ndarray,
+    std: np.ndarray,
+) -> np.ndarray:
     """
     Reverse z-scaling for the image. x = z*σ+µ
 

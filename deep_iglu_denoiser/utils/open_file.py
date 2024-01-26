@@ -3,7 +3,7 @@ import tifffile
 import nd2
 
 
-def open_file(filepath: str) -> np.ndarray[np.float64]:
+def open_file(filepath: str) -> np.ndarray:
     """
     Open and read an image file from the specified filepath.
 

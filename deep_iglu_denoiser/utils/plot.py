@@ -39,7 +39,7 @@ def plot_img(
     plt.close()
 
 
-def plot_train_loss(loss: np.ndarray[np.float64], savepath: str) -> None:
+def plot_train_loss(loss: np.ndarray, savepath: str) -> None:
     """
     Plot training loss over iterations.
 
