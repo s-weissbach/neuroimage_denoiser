@@ -1,6 +1,6 @@
 # Deep iGlu Denoiser Documentation
 
-# Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Getting Started](#getting-started)
@@ -10,8 +10,6 @@
   - [Prepare Config File](#2-prepare-config-file)
   - [Train the Model](#3-train-the-model)
 
-
-# Deep iGlu Denoiser
 
 ## Overview
 
