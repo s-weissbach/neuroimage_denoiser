@@ -20,6 +20,7 @@ The Deep iGlu Denoiser is a powerful tool designed for denoising microscopic rec
 | <img src="graphics/raw.gif" title="raw" alt="raw synapse" width="210"> | <img src="graphics/denoised.gif" title="denoised" alt="denoised synapse" width="210"> |
 
 The Deep iGlu Denoiser maintains the amplitude heights and therefore does not alter subsequent analysis. 
+
 <img src="graphics/correlation_analysis.jp2" title="correlation" alt="correlation raw amplitudes to denoised amplitutes" width="420">
 
 ## Getting started
@@ -39,10 +40,10 @@ Follow these steps to set up Deep iGlu Denoiser:
    git clone https://github.com/s-weissbach/deep_iglu_denoiser.git
    ```
 
-3. **Download Pre-trained Model:**
+3. **Download re-trained model:**
    Download the pre-trained model from [the release page](https://github.com/s-weissbach/deep_iglu_denoiser/releases/) and place it in the project directory.
 
-4. **Install Requirements:**
+4. **Install requirements:**
 
    ```bash
    pip install -r requirements.txt
@@ -84,7 +85,7 @@ python denoise.py --path /path/to/images --modelpath /path/to/model_weights --di
 
 All files will be written as a `.tiff`file.
 
-If you need other file formats to be supported, feel free to open an issue on GitHub.
+If you require other file formats to be supported, feel free to open an issue on GitHub.
 
 ## Example
 
@@ -108,7 +109,7 @@ To train a custom model for denoising, follow these steps:
 ## 1. Prepare Training Data
 
 > [!WARNING]
-> Potentially uses a lot of RAM. If you have limited RAM capicity use `--memory_optimized`.
+> Potentially uses a lot of RAM. If you have limited RAM capicity use `--memory_optimized`. Beware that this will increase execution time.
 
 > [!NOTE]
 > The recordings itself can be noisy.
@@ -155,7 +156,7 @@ noise_center: 0.0
 noise_scale: 1.5
 ```
 
-Adjust the paths and parameters in the configuration file based on your specific setup and requirements. This configuration file will be used during the training process to specify various parameters:
+Adjust the paths and parameters in the configuration file based on your specific setup and requirements. This configuration file will be used during the training process to specify various parameters further:
 
 ## Training Configuration File Summary
 
