@@ -64,6 +64,14 @@ def main() -> None:
         help="Number of frames to add after a detected event, to also train to reconstruct the typical decay of the sensor. (default: 0)",
     )
     parser.add_argument(
+        "--stimulationframes",
+        nargs="+",
+        help="List of frames that were stimulated and thus activity is expected",
+    )
+    parser.add_argument(
+        "--n_frames", type=int, help="Number of frames to include after stimulation."
+    )
+    parser.add_argument(
         "--window_size",
         "-w",
         type=int,
@@ -87,7 +95,7 @@ def main() -> None:
         "--memory_optimized",
         type=bool,
         default=False,
-        help="Utilize optimized memory mode. Trades speed for lower memory usage"
+        help="Utilize optimized memory mode. Trades speed for lower memory usage",
     )
     # parse arguments
     args = parser.parse_args()
@@ -100,6 +108,8 @@ def main() -> None:
     before = args.before
     after = args.after
     window_size = args.window_size
+    stimulationframes = args.stimulationframes
+    n_frames = args.n_frames
     fg_split = args.fgsplit
     output_h5_file = args.trainh5
     overwrite = args.overwrite
@@ -118,6 +128,8 @@ def main() -> None:
         crop_size=crop_size,
         roi_size=roi_size,
         window_size=window_size,
+        stimulationframes=stimulationframes,
+        n_frames=n_frames,
         foreground_background_split=fg_split,
         output_h5_file=output_h5_file,
         memory_optimized=memory_optimized,
