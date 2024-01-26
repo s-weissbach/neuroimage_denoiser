@@ -263,6 +263,7 @@ class TrainFiles:
             ]
             hf.create_dataset(str(idx), data=example)
             idx += 1
+        return idx
 
     def handle_file_memory_optimized(
         self,
