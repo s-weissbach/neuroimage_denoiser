@@ -94,6 +94,7 @@ To train a custom model for denoising, follow these steps:
 
 > [!WARNING]
 > Potentially uses a lot of RAM. If you have limited RAM capicity use `--memory_optimized`
+
 > [!NOTE]
 > The recordings itself can be noisy.
 
