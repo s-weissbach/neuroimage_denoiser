@@ -126,7 +126,7 @@ If the csv-file and the h5-file exist, the new videos will be appended to the h5
 
 ## 2. Prepare config file
 
-<a "config> Create a `trainconfig.yaml` file with the following configuration settings. </a>
+<a "config"> Create a `trainconfig.yaml` file with the following configuration settings. </a>
 
 ```yaml
 modelpath: 'unet.pt'
