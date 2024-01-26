@@ -35,7 +35,10 @@ def main(
                     continue
                 filelist.append(os.path.join(folderpath, filename))
                 # preserver original folderstructure
-                outputpaths.append(os.path.join(outputpath,folderpath.split(f'{path}/')[1]))
+                if folderpath == path:
+                    outputpaths.append(outputpath)
+                else:
+                    outputpaths.append(os.path.join(outputpath, folderpath.split(f'{path}' + os.path.sep)[1]))
     else:
         if not any([path.endswith(ending) for ending in valid_fileendings]):
             raise NotImplementedError(
