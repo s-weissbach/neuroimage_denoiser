@@ -6,7 +6,8 @@ The Deep iGlu Denoiser is a powerful tool designed for denoising microscopic rec
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | <img src="graphics/raw.gif" title="raw" alt="raw synapse" width="210"> | <img src="graphics/denoised.gif" title="denoised" alt="denoised synapse" width="210"> |
 
-
+The Deep iGlu Denoiser maintains the amplitude heights and therefore does not alter subsequent analysis. 
+<img src="graphics/correlation_analysis.jp2" title="correlation" alt="correlation raw amplitudes to denoised amplitutes" width="420">
 
 ## Getting started
 
@@ -91,7 +92,13 @@ To train a custom model for denoising, follow these steps:
 
 ## 1. Prepare Training Data
 
-Store all recordings with **one sensor** and store them in a directory `/path/to/traindata/`. **The recordings itself can be noisy.**
+> [!WARNING]
+> Potentially uses a lot of RAM. If you have limited RAM capicity use `--memory_optimized`
+
+
+Store all recordings with **one sensor** and store them in a directory `/path/to/traindata/`.
+> [!NOTE]
+> The recordings itself can be noisy.
 
 Use the `prepare_trainfiles.py` script to generate training data from a set of images. The script takes the following arguments:
 
