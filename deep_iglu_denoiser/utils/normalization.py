@@ -40,7 +40,8 @@ def moving_std(
 
 
 def rolling_window_z_norm(
-        img: np.ndarray[np.int64], window_size: int,
+    img: np.ndarray[np.int64],
+    window_size: int,
 ) -> np.ndarray[np.float64]:
     """
     Apply rolling window z-scaling to an image sequence.
@@ -64,7 +65,9 @@ def rolling_window_z_norm(
 
 
 def rolling_window_z_norm_memory_optimized(
-        img: np.ndarray[np.int64], window_size: int, base_dir: str,
+    img: np.ndarray[np.int64],
+    window_size: int,
+    base_dir: str,
 ) -> np.ndarray[np.float64]:
     """
     Apply rolling window z-scaling to an image sequence.
@@ -76,8 +79,18 @@ def rolling_window_z_norm_memory_optimized(
     Returns:
         np.ndarray[np.float64]: Z-scaled image sequence.
     """
-    std_mmap = np.memmap(os.path.join(base_dir, 'mmap_std.npy'), dtype='float64', mode='w+', shape=img.shape)
-    mean_mmap = np.memmap(os.path.join(base_dir, 'mmap_mean.npy'), dtype='float64', mode='w+', shape=img.shape)
+    std_mmap = np.memmap(
+        os.path.join(base_dir, "mmap_std.npy"),
+        dtype="float64",
+        mode="w+",
+        shape=img.shape,
+    )
+    mean_mmap = np.memmap(
+        os.path.join(base_dir, "mmap_mean.npy"),
+        dtype="float64",
+        mode="w+",
+        shape=img.shape,
+    )
     before = window_size // 2
     after = window_size - before
     mean_mmap[:] = uniform_filter1d(img, window_size, axis=0, mode="constant")[:]
