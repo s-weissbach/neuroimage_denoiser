@@ -28,3 +28,7 @@ psutil = "^5.9.8"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+prepare_trainfiles = 'deep_iglu_denoiser.prepare_trainfiles:main'
+denoise = 'deep_iglu_denoiser.denoise:main'
