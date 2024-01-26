@@ -41,6 +41,8 @@ Follow these steps to set up Deep iGlu Denoiser:
    ```
 
 ## Usage
+> [!Tip]
+> The `--directory_mode` will presever the folderstructure of the input folder.
 Activate the conda enviorment:
 ```bash
 conda activate deep_iglu_denoiser
@@ -93,7 +95,7 @@ To train a custom model for denoising, follow these steps:
 ## 1. Prepare Training Data
 
 > [!WARNING]
-> Potentially uses a lot of RAM. If you have limited RAM capicity use `--memory_optimized`
+> Potentially uses a lot of RAM. If you have limited RAM capicity use `--memory_optimized`.
 
 > [!NOTE]
 > The recordings itself can be noisy.
