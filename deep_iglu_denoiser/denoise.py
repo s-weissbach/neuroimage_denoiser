@@ -19,6 +19,9 @@ def main(
         batch_size (int): Number of frames predicted at once.
     """
     valid_fileendings = [".tif", ".tiff", ".stk", ".nd2"]
+    # ensure absolute path
+    outputpath = os.path.abspath(outputpath)
+    path = os.path.abspath(path)
     # initalize model
     model = ModelWrapper(modelpath, batch_size)
     if directory_mode:
@@ -32,8 +35,7 @@ def main(
                     continue
                 filelist.append(os.path.join(folderpath, filename))
                 # preserver original folderstructure
-                outputpaths.append(os.path.join(outputpath, path.split(path)[1]))
-
+                outputpaths.append(os.path.join(outputpath,folderpath.split(f'{path}/')[1]))
     else:
         if not any([path.endswith(ending) for ending in valid_fileendings]):
             raise NotImplementedError(
