@@ -1,4 +1,19 @@
+# Deep iGlu Denoiser Documentation
+
+# Table of Contents
+
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Training a Custom Model](#training-a-custom-model)
+  - [Prepare Training Data](#1-prepare-training-data)
+  - [Prepare Config File](#2-prepare-config-file)
+  - [Train the Model](#3-train-the-model)
+
+
 # Deep iGlu Denoiser
+
+## Overview
 
 The Deep iGlu Denoiser is a powerful tool designed for denoising microscopic recordings, offering pre-trained model weights for the **iGlu-Snfr3 sensor** ready to use. This denoising is built upon the [U-Net](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28) model architecture. The model can be trained on any microscopic data, without the need for manual data curation.
 
@@ -17,24 +32,19 @@ Follow these steps to set up Deep iGlu Denoiser:
 
    ```bash
    conda create -n deep_iglu_denoiser python=3.10 pip
-   ```
-
-2. **Activate enviorment:**
-
-   ```bash
    conda activate deep_iglu_denoiser
    ```
 
-3. **Clone the repository:**
+2. **Clone the repository:**
 
    ```bash
    git clone https://github.com/s-weissbach/deep_iglu_denoiser.git
    ```
 
-4. **Download Pre-trained Model:**
+3. **Download Pre-trained Model:**
    Download the pre-trained model from [the release page](https://github.com/s-weissbach/deep_iglu_denoiser/releases/) and place it in the project directory.
 
-5. **Install Requirements:**
+4. **Install Requirements:**
 
    ```bash
    pip install -r requirements.txt
@@ -59,11 +69,14 @@ python denoise.py --path /path/to/images --modelpath /path/to/model_weights --di
 
 ### Arguments:
 
-- `--path (-p)`: Path to the input imagestack or directory containing images.
-- `--modelpath (-m)`: Path to the pre-trained model weights.
-- `--directory_mode (-d)`: Flag to enable directory mode.
-- `--outputpath (-o)`: Path to the output directory.
-- `--batchsize (-b)`: Number of frames predicted at once (depends on the vRAM of your graphics card) – default: 1.
+| Argument                 | Shorthand | Description                                          |
+|--------------------------|-----------|------------------------------------------------------|
+| `--path`                 | `-p`      | Path to input imagestack or directory                |
+| `--modelpath`            | `-m`      | Path to pre-trained model weights                   |
+| `--directory_mode`       | `-d`      | Enable directory mode (preserve folder structure)   |
+| `--outputpath`           | `-o`      | Path to output directory                             |
+| `--batchsize`            | `-b`      | Number of frames predicted at once (default: 1)      |
+
 
 ### Supported File Formats
 
@@ -77,19 +90,18 @@ If you need other file formats to be supported, feel free to open an issue on Gi
 
 ## Example
 
-Denoise a single imagestack:
+Denoise a single recording:
 
 ```bash
 python denoise.py --path /path/to/imagestack.tiff --modelpath /path/to/model.pt --outputpath /output/path
 ```
 
-Denoise all images in a directory:
+Denoise all recordings in a directory:
 
 ```bash
 python denoise.py --path /path/to/images_folder --modelpath /path/to/model_weights --directory_mode -o /output/path
 ```
 
-Note: Make sure to replace "/path/to/" and "/output/path" with the actual paths on your system.
 
 # Training a Custom Model
 
@@ -107,18 +119,20 @@ Prepare the creation by storing all recordings with **one sensor** in a director
 
 Use the `prepare_trainfiles.py` script to generate training data from a set of images. The script takes the following arguments:
 
-- `--path (-p)`: Path to the folder containing images.
-- `--fileendings (-f)`: List of file endings to consider.
-- `--crop_size (-c)`: Crop size used during training (default: 32).
-- `--roi_size`: Expected ROI size; assumes for detection square of (roi_size x roi_size) (default: 4).
-- `--trainh5 (-t)`: Path to the output H5 file that will be created.
-- `--min_z_score (-z)`: Minimum Z score to be considered an active ROI (default: 2).
-- `--before`: Number of frames to add before a detected event, to also train to reconstruct the typical raise of the sensor's signal (default: 0).
-- `--after`: Number of frames to add after a detected event, to also train to reconstruct the typical decay of the sensor's signal (default: 0).
-- `--window_size (-w)`: Number of frames used for rolling window z-normalization (default: 50).
-- `--fgsplit (-s)`: Foreground to background split (default: 0.5).
-- `--overwrite`: Overwrite existing H5 file. If false, data will be appended (default: False).
-- `--memory_optimized`: Execute preparation process with optimized memory usage. Increases execution time. (default: False).
+| Argument                  | Shorthand     | Description                                                      |
+|---------------------------|---------------|------------------------------------------------------------------|
+| `--path`                  | `-p`          | Path to the folder containing images                             |
+| `--fileendings`           | `-f`          | List of file endings to consider                                 |
+| `--crop_size`             | `-c`          | Crop size used during training (default: 32)                     |
+| `--roi_size`              |               | Expected ROI size; assumes detection square of (roi_size x roi_size) (default: 4) |
+| `--trainh5`               | `-t`          | Path to the output H5 file that will be created                  |
+| `--min_z_score`           | `-z`          | Minimum Z score to be considered an active ROI (default: 2)      |
+| `--before`                |               | Number of frames to add before a detected event (default: 0)    |
+| `--after`                 |               | Number of frames to add after a detected event (default: 0)     |
+| `--window_size`           | `-w`          | Number of frames used for rolling window z-normalization (default: 50) |
+| `--fgsplit`               | `-s`          | Foreground to background split (default: 0.5)                    |
+| `--overwrite`             |               | Overwrite existing H5 file. If false, data will be appended (default: False) |
+| `--memory_optimized`      |               | Execute preparation process with optimized memory usage. Increases execution time (default: False) |
 
 Example usage:
 
@@ -145,25 +159,21 @@ noise_scale: 1.5
 
 Adjust the paths and parameters in the configuration file based on your specific setup and requirements. This configuration file will be used during the training process to specify various parameters:
 
-- **modelpath**: Path to save the model after training.
+## Training Configuration File Summary
 
-- **train_h5**: Path to the h5 file containing the training data
+| Argument                        | Description                                                            |
+|---------------------------------|------------------------------------------------------------------------|
+| `modelpath`                     | Path to save the model after training                                  |
+| `train_h5`                      | Path to the h5 file containing the training data                       |
+| `batch_size`                    | Number of training examples utilized in one iteration                   |
+| `learning_rate`                 | Rate at which the model's weights are updated during training           |
+| `num_epochs`                    | Number of times the entire training dataset is passed through the network |
+| `path_example_img`              | Path to an example image used for visualization of the training progress. Set to `''` if not used |
+| `target_frame_example_img`      | Frame number in the example image used as the prediction target during training |
+| `predict_every_n_batches`       | Frequency at which the model predicts outputs during training          |
+| `noise_center`                  | Center of the noise added to the input data during training             |
+| `noise_scale`                   | Scale of the noise added to the input data during training               |
 
-- **batch_size**: Number of training examples utilized in one iteration (limited by the vRAM of your graphics card).
-
-- **learning_rate**: Rate at which the model's weights are updated during training.
-
-- **num_epochs**: Number of times the entire training dataset is passed forward and backward through the neural network.
-
-- **path_example_img**: Path to an example image used for visualization of the training progress, if you don't want to use it set to `''`.
-
-- **target_frame_example_img**: Frame number in the example image to be used as the prediction target during ttraining.
-
-- **predict_every_n_batches**: Frequency at which the model predicts outputs during training, useful for monitoring progress.
-
-- **noise_center**: Center of the noise added to the input data during training (noise augmentation). A center of 0 is recommended, since the z-normalized images have a mean of 0 for each pixel.
-
-- **noise_scale**: Scale of the noise added to the input data during training (noise augmentation).
 
 ## 3. Train the model
 
