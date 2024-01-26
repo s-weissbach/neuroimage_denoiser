@@ -110,7 +110,7 @@ def main() -> None:
     window_size = args.window_size
     stimulationframes = (
         [int(frame) for frame in args.stimulationframes]
-        if args.stimulationsframes
+        if args.stimulationframes
         else []
     )
     n_frames = args.n_frames
