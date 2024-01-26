@@ -43,6 +43,7 @@ Follow these steps to set up Deep iGlu Denoiser:
 ## Usage
 > [!Tip]
 > The `--directory_mode` will presever the folderstructure of the input folder.
+
 Activate the conda enviorment:
 ```bash
 conda activate deep_iglu_denoiser
