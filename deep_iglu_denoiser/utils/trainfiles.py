@@ -221,7 +221,15 @@ class TrainFiles:
         file = open_file(filepath)
         # find train examples with activity
         file_znorm = normalization.rolling_window_z_norm(file, window_size)
-
+        if max(stimulationframes) >= file.shape[0]:
+            print(
+                f"WARNING: stimulationframes ({stimulationframes}) out of range of loaded file with number of frames ({file.shape[0]})."
+            )
+            stimulationframes = [
+                stimframe
+                for stimframe in stimulationframes
+                if stimframe < file.shape[0]
+            ]
         # will go through all frames and extract events that within a meaned kernel exceed the
         # min_z_score threshold
         # returns a list of events in the form [frame, y-coord, x-coord]
@@ -275,6 +283,15 @@ class TrainFiles:
         foreground_background_split: float = 0.1,
     ):
         file = open_file(filepath)
+        if max(stimulationframes) >= file.shape[0]:
+            print(
+                f"WARNING: stimulationframes ({stimulationframes}) out of range of loaded file with number of frames ({file.shape[0]})."
+            )
+            stimulationframes = [
+                stimframe
+                for stimframe in stimulationframes
+                if stimframe < file.shape[0]
+            ]
         # -- numpy memmaps --
         mmap_file_path = os.path.join(directory, "mmap_time_file.npy")
         file_shape = file.shape
