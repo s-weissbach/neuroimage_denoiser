@@ -40,14 +40,16 @@ Follow these steps to set up Deep iGlu Denoiser:
    git clone https://github.com/s-weissbach/deep_iglu_denoiser.git
    ```
 
-3. **Download pre-trained model:**
-   Download the pre-trained model from [the release page](https://github.com/s-weissbach/deep_iglu_denoiser/releases/) and place it in the project directory.
-
-4. **Install requirements:**
+3. **Install:**
 
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
    ```
+
+4. **Download pre-trained model:**
+   Download the pre-trained model from [the release page](https://github.com/s-weissbach/deep_iglu_denoiser/releases/) and place it in the project directory.
+
+
 
 ## Usage
 > [!Tip]
@@ -61,7 +63,7 @@ conda activate deep_iglu_denoiser
 Run the following command to denoise images using the provided script:
 
 ```bash
-python denoise.py --path /path/to/images --modelpath /path/to/model_weights --directory_mode -o /output/path
+python -m deep_iglu_denoiser.denoise --path /path/to/images --modelpath /path/to/model_weights --directory_mode -o /output/path
 ```
 > [!IMPORTANT]
 > Although the Deep iGlu Denoiser will work without a NVIDIA graphics card, it will run significantly slower. We highly recommend to only work on a server/PC with an available graphics card.
@@ -71,10 +73,11 @@ python denoise.py --path /path/to/images --modelpath /path/to/model_weights --di
 | Argument                 | Shorthand | Description                                          |
 |--------------------------|-----------|------------------------------------------------------|
 | `--path`                 | `-p`      | Path to input imagestack or directory                |
-| `--modelpath`            | `-m`      | Path to pre-trained model weights                   |
-| `--directory_mode`       | `-d`      | Enable directory mode (preserve folder structure)   |
+| `--modelpath`            | `-m`      | Path to pre-trained model weights                    |
+| `--directory_mode`       | `-d`      | Enable directory mode (preserve folder structure)    |
 | `--outputpath`           | `-o`      | Path to output directory                             |
 | `--batchsize`            | `-b`      | Number of frames predicted at once (default: 1)      |
+| `--cpu`                  |           | Force CPU useage, even if a GPU was found            |
 
 
 ### Supported File Formats
@@ -92,13 +95,13 @@ If you require other file formats to be supported, feel free to open an issue on
 Denoise a single recording:
 
 ```bash
-python denoise.py --path /path/to/imagestack.tiff --modelpath /path/to/model.pt --outputpath /output/path
+python -m deep_iglu_denoiser.denoise --path /path/to/imagestack.tiff --modelpath /path/to/model.pt --outputpath /output/path
 ```
 
 Denoise all recordings in a directory:
 
 ```bash
-python denoise.py --path /path/to/images_folder --modelpath /path/to/model_weights --directory_mode -o /output/path
+python -m deep_iglu_denoiser.denoise --path /path/to/images_folder --modelpath /path/to/model_weights --directory_mode -o /output/path
 ```
 
 
@@ -116,7 +119,7 @@ To train a custom model for denoising, follow these steps:
 
 Prepare the creation by storing all recordings with **one sensor** in a directory `/path/to/traindata/`.
 
-Use the `prepare_trainfiles.py` script to generate training data from a set of images. The script takes the following arguments:
+Use the `prepare_trainfiles` script to generate training data from a set of images. The script takes the following arguments:
 
 | Argument                  | Shorthand     | Description                                                      |
 |---------------------------|---------------|------------------------------------------------------------------|
@@ -135,7 +138,7 @@ Use the `prepare_trainfiles.py` script to generate training data from a set of i
 
 Example usage:
 
-`python prepare_trainfiles.py --csv train_data.csv --path /path/to/traindata --fileendings tif tiff --crop_size 32 --roi_size 8 --trainh5 training_data.h5 --min_z_score 2.0 --before 0 --after 0 --window_size 50 --fgsplit 0.5 --overwrite False`
+`python -m deep_iglu_denoiser.prepare_trainfiles --csv train_data.csv --path /path/to/traindata --fileendings tif tiff --crop_size 32 --roi_size 8 --trainh5 training_data.h5 --min_z_score 2.0 --before 0 --after 0 --window_size 50 --fgsplit 0.5 --overwrite False`
 
 If the csv-file and the h5-file exist, the new videos will be appended to the h5 file. It is recommended to **backup the h5-file** before running this script.
 
@@ -179,7 +182,7 @@ Adjust the paths and parameters in the configuration file based on your specific
 Run the training script by executing the following command:
 
 ```bash
-python start_training.py --trainconfigpath /path/to/trainconfig.yaml`
+python -m deep_iglu_denoiser.start_training --trainconfigpath /path/to/trainconfig.yaml`
 ```
 
 `--trainconfigpath (-p)`: Path to the train config YAML file containing training parameters.
