@@ -16,7 +16,7 @@ class ModelWrapper:
     - n_post (int): Number of frames to use after the target frame.
     """
 
-    def __init__(self, weights: str, batch_size: int) -> None:
+    def __init__(self, weights: str, batch_size: int, cpu: bool) -> None:
         """
         Initialize the ModelWrapper.
 
@@ -31,6 +31,9 @@ class ModelWrapper:
         self.batch_size = batch_size
         # check for GPU, use CPU otherwise
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # if flag cpu is set, use cpu regardless of available GPU
+        if cpu:
+            self.device = "cpu"
         self.model = UNet(1)
         self.load_weights(weights)
         self.model.to(self.device)
