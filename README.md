@@ -21,7 +21,7 @@ The Deep iGlu Denoiser is a powerful tool designed for denoising microscopic rec
 
 The Deep iGlu Denoiser maintains the amplitude heights and therefore does not alter subsequent analysis. 
 
-<img src="graphics/correlation_analysis.jp2" title="correlation" alt="correlation raw amplitudes to denoised amplitutes" width="420">
+<img src="graphics/correlation_analysis.jpg" title="correlation" alt="correlation raw amplitudes to denoised amplitutes" width="420">
 
 ## Getting started
 
