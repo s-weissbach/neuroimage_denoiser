@@ -38,6 +38,7 @@ Follow these steps to set up Deep iGlu Denoiser:
 
    ```bash
    git clone https://github.com/s-weissbach/deep_iglu_denoiser.git
+   cd deep_iglu_denoiser
    ```
 
 3. **Install:**
