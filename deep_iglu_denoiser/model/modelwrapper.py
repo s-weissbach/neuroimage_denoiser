@@ -52,7 +52,10 @@ class ModelWrapper:
         Parameters:
         - weights (str): Path to the pre-trained weights file.
         """
-        self.model.load_state_dict(torch.load(weights))
+        if self.device == "cpu":
+            self.model.load_state_dict(torch.load(weights, map_location=torch.device("cpu")))
+        else:
+            self.model.load_state_dict(torch.load(weights))
         self.model.eval()
 
     def load_and_normalize_img(self, img_path: str) -> None:
