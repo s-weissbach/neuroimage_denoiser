@@ -6,7 +6,12 @@ from deep_iglu_denoiser.utils.copy_folder_structure import copy_folder_structure
 
 
 def main(
-    path: str, modelpath: str, directory_mode: str, outputpath: str, batch_size: int, cpu: bool
+    path: str,
+    modelpath: str,
+    directory_mode: str,
+    outputpath: str,
+    batch_size: int,
+    cpu: bool,
 ) -> None:
     """
     Main function for denoising images using a trained model.
@@ -59,6 +64,7 @@ def main(
                 print(
                     f"Skipped {filename}, because file already exists ({outfilepath})."
                 )
+                bar()
                 continue
             model.denoise_img(filepath)
             model.write_denoised_img(outfilepath)
@@ -94,9 +100,7 @@ def parse_arguments():
         default=1,
         help="Number of frames that are predicted at once.",
     )
-    parser.add_argument(
-        "--cpu", action="store_true", help="Force CPU and not use GPU."
-    )
+    parser.add_argument("--cpu", action="store_true", help="Force CPU and not use GPU.")
 
     args = parser.parse_args()
 
@@ -123,5 +127,10 @@ if __name__ == "__main__":
     args = parse_arguments()
     # Call the main function with the parsed arguments
     main(
-        args.path, args.modelpath, args.directory_mode, args.outputpath, args.batchsize, args.cpu
+        args.path,
+        args.modelpath,
+        args.directory_mode,
+        args.outputpath,
+        args.batchsize,
+        args.cpu,
     )

@@ -58,6 +58,11 @@ def main() -> None:
         help="Number of frames to add after a detected event, to also train to reconstruct the typical decay of the sensor. (default: 0)",
     )
     parser.add_argument(
+        "--activitymap",
+        action="store_true",
+        help="Search for active ROI without prior information.",
+    )
+    parser.add_argument(
         "--stimulationframes",
         nargs="+",
         help="List of frames that were stimulated and thus activity is expected",
@@ -101,6 +106,7 @@ def main() -> None:
     frames_before_event = args.before
     frames_after_event = args.after
     window_size = args.window_size
+    activitymap = args.activitymap
     stimulationframes = (
         [int(frame) for frame in args.stimulationframes]
         if args.stimulationframes
@@ -122,6 +128,7 @@ def main() -> None:
         roi_size=roi_size,
         output_h5_file=output_h5_file,
         window_size=window_size,
+        activitymap=activitymap,
         stimulationframes=stimulationframes,
         n_frames=n_frames,
         foreground_background_split=fg_split,
