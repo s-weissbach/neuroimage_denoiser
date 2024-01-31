@@ -118,6 +118,11 @@ def main() -> None:
     overwrite = args.overwrite
     memory_optimized = args.memory_optimized
 
+    if not activitymap and len(stimulationframes) == 0:
+        raise ValueError(
+            "When not using --activitymap, you have to provide stimulationframes with --stimulationframes"
+        )
+
     # initalize TrainFiles class
     trainfiles = TrainFiles(
         fileendings=file_endings,
