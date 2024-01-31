@@ -21,6 +21,7 @@ class TrainFiles:
         roi_size: int,
         output_h5_file: str,
         window_size: int = 50,
+        activitymap: bool = False,
         stimulationframes: list[int] = [],
         n_frames: int = 1,
         foreground_background_split: float = 0.1,
@@ -41,6 +42,7 @@ class TrainFiles:
         self.roi_size = roi_size
         self.output_h5_file = output_h5_file
         self.window_size = window_size
+        self.activitymap = activitymap
         self.stimulationframes = stimulationframes
         self.n_frames = n_frames
         self.foreground_background_split = foreground_background_split
@@ -84,22 +86,28 @@ class TrainFiles:
 
         if os.path.exists(self.output_h5_file) and not self.overwrite:
             print("Found existing h5-file. Will append.")
-            hf = h5py.File(self.output_h5_file, "w")
+            # find index
+            hf = h5py.File(self.output_h5_file, "a")
             self.idx = np.max([int(key) for key in hf.keys()]) + 1
+            hf.close()
         elif os.path.exists(self.output_h5_file) and self.overwrite:
             os.remove(self.output_h5_file)
+            # initalize h5 file
             hf = h5py.File(self.output_h5_file, "w")
             self.idx = 0
+            hf.close()
         else:
+            # initalize h5 file
             hf = h5py.File(self.output_h5_file, "w")
             self.idx = 0
+            hf.close()
 
         with alive_bar(len(files_to_do)) as bar:
             for filepath in files_to_do:
                 if memory_optimized:
-                    self.handle_file_memory_optimized(filepath, hf, directory)
+                    self.handle_file_memory_optimized(filepath, directory)
                 else:
-                    self.handle_file(filepath, hf)
+                    self.handle_file(filepath)
                 bar()
 
         if memory_optimized:
@@ -112,7 +120,6 @@ class TrainFiles:
     def handle_file(
         self,
         filepath: str,
-        hf: h5py.File,
     ) -> None:
         file = open_file(filepath)
         # find train examples with activity
@@ -146,7 +153,7 @@ class TrainFiles:
         mean = np.mean(file, axis=0)
         std = np.std(file, axis=0)
         file = normalization.z_norm(file, mean, std)
-
+        hf = h5py.File(self.output_h5_file, "a")
         # create dict to be stored as h5 file
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
@@ -157,10 +164,9 @@ class TrainFiles:
             ]
             hf.create_dataset(str(self.idx), data=example)
             self.idx += 1
+        hf.close()
 
-    def handle_file_memory_optimized(
-        self, filepath: str, hf: h5py.File, directory: str
-    ) -> None:
+    def handle_file_memory_optimized(self, filepath: str, directory: str) -> None:
         file = open_file(filepath)
         if max(self.stimulationframes) >= file.shape[0]:
             print(
@@ -223,7 +229,7 @@ class TrainFiles:
         std = np.std(mmap_file, axis=0)
 
         mmap_file[:] = normalization.z_norm(mmap_file, mean, std)[:]
-
+        hf = h5py.File(self.output_h5_file, "a")
         # create dict to be stored as h5 file
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
@@ -234,3 +240,4 @@ class TrainFiles:
             ]
             hf.create_dataset(str(self.idx), data=example)
             self.idx += 1
+        hf.close()
