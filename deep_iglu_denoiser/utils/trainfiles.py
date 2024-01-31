@@ -284,3 +284,81 @@ class TrainFiles:
             hf.create_dataset(str(self.idx), data=example)
             self.idx += 1
         hf.close()
+
+    def handle_file_activitymap_memory_optimized(
+        self, filepath: str, directory: str
+    ) -> None:
+        file = open_file(filepath)
+        # -- numpy memmaps --
+        mmap_file_path = os.path.join(directory, "mmap_time_file.npy")
+        file_shape = file.shape
+        np.save(mmap_file_path, file)
+        # wrap memmap around file on disk
+        mmap_file = np.memmap(
+            mmap_file_path, dtype="float64", mode="w+", shape=file_shape
+        )
+        mmap_file[:] = file[:]
+        # clear ram by removing file
+        del file
+        # flush mmap to disk
+        mmap_file.flush()
+
+        mmap_znorm_file_path = os.path.join(directory, "mmap_time_znorm_file.npy")
+        # wrap memmap around file on disk
+        mmap_znorm_file = np.memmap(
+            mmap_znorm_file_path, dtype="float64", mode="w+", shape=file_shape
+        )
+        # find train examples with activity
+        znorm_file = normalization.rolling_window_z_norm_memory_optimized(
+            mmap_file, self.window_size, directory
+        )
+        mmap_znorm_file[:] = znorm_file[:]
+        # flush mmap to disk
+        del znorm_file
+        mmap_znorm_file.flush()
+        if max(self.stimulationframes) >= mmap_znorm_file.shape[0]:
+            print(
+                f"WARNING: stimulationframes ({self.stimulationframes}) out of range of loaded file with number of frames ({mmap_znorm_file.shape[0]})."
+            )
+        stimulationframes = [
+            stimframe
+            for stimframe in self.stimulationframes
+            if stimframe < mmap_znorm_file.shape[0]
+        ]
+        # will go through all frames and extract events that within a meaned kernel exceed the
+        # min_z_score threshold
+        # returns a list of events in the form [frame, y-coord, x-coord]
+        frames_and_positions = get_frames_position(
+            mmap_znorm_file,
+            self.min_z_score,
+            self.frames_before_event,
+            self.frames_after_event,
+            self.crop_size,
+            self.roi_size,
+            stimulationframes,
+            self.n_frames,
+            self.foreground_background_split,
+        )
+
+        print(f"Found {len(frames_and_positions)} example(s) in file {filepath}")
+
+        if len(frames_and_positions) == 0:
+            return
+
+        mean = np.mean(mmap_file, axis=0)
+        std = np.std(mmap_file, axis=0)
+
+        mmap_file[:] = normalization.z_norm(mmap_file, mean, std)[:]
+
+        # create dict to be stored as h5 file
+        hf = h5py.File(self.output_h5_file, "a")
+        for event in frames_and_positions:
+            target_frame, y_pos, x_pos = event
+            example = mmap_file[
+                target_frame,
+                y_pos : y_pos + self.crop_size,
+                x_pos : x_pos + self.crop_size,
+            ]
+            hf.create_dataset(str(self.idx), data=example)
+            self.idx += 1
+        hf.close()
