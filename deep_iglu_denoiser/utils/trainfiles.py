@@ -133,6 +133,9 @@ class TrainFiles:
         filepath: str,
     ) -> None:
         file = open_file(filepath)
+        if len(file.shape) <= 2:
+            print(f"WARNING: skipped ({filepath}), not a series.")
+            return
         # find train examples with activity
         mean = np.mean(file, axis=0)
         std = np.std(file, axis=0)
@@ -180,6 +183,9 @@ class TrainFiles:
         filepath: str,
     ) -> None:
         file = open_file(filepath)
+        if len(file.shape) <= 2:
+            print(f"WARNING: skipped ({filepath}), not a series.")
+            return
         # find train examples with activity
         file_znorm = normalization.rolling_window_z_norm(file, self.window_size)
         if max(self.stimulationframes) >= file.shape[0]:
@@ -226,6 +232,9 @@ class TrainFiles:
 
     def handle_file_memory_optimized(self, filepath: str, directory: str) -> None:
         file = open_file(filepath)
+        if len(file.shape) <= 2:
+            print(f"WARNING: skipped ({filepath}), not a series.")
+            return
         if max(self.stimulationframes) >= file.shape[0]:
             print(
                 f"WARNING: stimulationframes ({self.stimulationframes}) out of range of loaded file with number of frames ({file.shape[0]})."
@@ -289,6 +298,9 @@ class TrainFiles:
         self, filepath: str, directory: str
     ) -> None:
         file = open_file(filepath)
+        if len(file.shape) <= 2:
+            print(f"WARNING: skipped ({filepath}), not a series.")
+            return
         # -- numpy memmaps --
         mmap_file_path = os.path.join(directory, "mmap_time_file.npy")
         file_shape = file.shape
