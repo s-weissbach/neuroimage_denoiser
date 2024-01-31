@@ -118,7 +118,20 @@ To train a custom model for denoising, follow these steps:
 > [!NOTE]
 > The recordings itself can be noisy.
 
-Prepare the creation by storing all recordings with **one sensor** in a directory `/path/to/traindata/`.
+Prepare the creation by storing all recordings with **one sensor** in a directory `/path/to/traindata/`. 
+
+There are two modes to create the trainings data. 
+1. Stimulation based identification:
+   - requires `--stimulationframes` and `--n_frames`` as an input
+   - identifies active regions by maximum projection of the z-normalized image
+   - extracts all responses (regions of size ROI that exceeded the `min_z_score` in the maximum projection) for each stimulation
+2. Activitymap based identification:
+   - requires `--activitymap` flag to be set
+   - does not need recordings with stimulation
+   - applies rolling window z-normalization and identifies regions that exceed the `min_z_score` and the frame in that it happens
+   - adds all stimulation responses of the selected regions, if `--stimulationframes` is set
+> [!NOTE]
+> Activitymap runs 6x slower, but will detect more events.
 
 Use the `prepare_trainfiles` script to generate training data from a set of images. The script takes the following arguments:
 
@@ -132,6 +145,9 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 | `--min_z_score`           | `-z`          | Minimum Z score to be considered an active ROI (default: 2)      |
 | `--before`                |               | Number of frames to add before a detected event (default: 0)    |
 | `--after`                 |               | Number of frames to add after a detected event (default: 0)     |
+| `--activitymap`           |               | Extract synaptic responses without any prior information        |
+| `--stimulationframes`     |               | Frames in that stimulation was applied. Will extract responses of active regions from stimulationframe to stimulationframe + `--n_frames` |
+| `--n_frames`              |               | Number of frames to include after stimulation (default: 0) |
 | `--window_size`           | `-w`          | Number of frames used for rolling window z-normalization (default: 50) |
 | `--fgsplit`               | `-s`          | Foreground to background split (default: 0.5)                    |
 | `--overwrite`             |               | Overwrite existing H5 file. If false, data will be appended (default: False) |
@@ -139,9 +155,13 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 
 Example usage:
 
-`python -m deep_iglu_denoiser.prepare_trainfiles --csv train_data.csv --path /path/to/traindata --fileendings tif tiff --crop_size 32 --roi_size 8 --trainh5 training_data.h5 --min_z_score 2.0 --before 0 --after 0 --window_size 50 --fgsplit 0.5 --overwrite False`
+**Stimulation**
+`python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --stimulationframes 100 200 300 --n_frames 5 --fgsplit 0.8 --overwrite False --activitymap`
 
-If the csv-file and the h5-file exist, the new videos will be appended to the h5 file. It is recommended to **backup the h5-file** before running this script.
+**Activitymap**
+`python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --before 0 --after 0 --window_size 50 --fgsplit 0.8 --overwrite False --activitymap`
+
+
 
 ## 2. Prepare config file
 
