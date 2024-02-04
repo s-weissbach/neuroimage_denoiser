@@ -31,40 +31,13 @@ def main() -> None:
     batch_size = trainconfig["batch_size"]
     learning_rate = trainconfig["learning_rate"]
     num_epochs = trainconfig["num_epochs"]
-    path_example_img = trainconfig["path_example_img"]
-    target_frame_example_img = trainconfig["target_frame_example_img"]
-    predict_every_n_batches = trainconfig["predict_every_n_batches"]
     noise_center = trainconfig["noise_center"]
     noise_scale = trainconfig["noise_scale"]
 
     dataloader = DataLoader(train_h5, batch_size, noise_center, noise_scale)
     model = UNet(1)
 
-    if path_example_img == "":
-        train(model, dataloader, num_epochs, learning_rate, modelpath)
-
-    else:
-        example_img = open_file(path_example_img)
-        example_img_target_frame = example_img[target_frame_example_img]
-        mean = np.mean(example_img, axis=0)
-        std = np.std(example_img, axis=0)
-        example_img = z_norm(example_img, mean, std)
-        example_img_pred_frames = example_img[target_frame_example_img]
-        example_img_pred_frames = example_img_pred_frames.reshape(
-            1, 1, example_img.shape[-2], example_img.shape[-1]
-        )
-        train(
-            model,
-            dataloader,
-            num_epochs,
-            learning_rate,
-            modelpath,
-            example_img=example_img_pred_frames,
-            example_img_target=example_img_target_frame,
-            example_mean=mean,
-            example_std=std,
-            predict_example_every_n_batches=predict_every_n_batches,
-        )
+    train(model, dataloader, num_epochs, learning_rate, modelpath)
 
 
 if __name__ == "__main__":

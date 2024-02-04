@@ -18,11 +18,6 @@ def train(
     learningrate: float = 0.0001,
     modelpath: str = "unet.pt",
     history_savepath: str = "train_loss.npy",
-    example_img: Union[np.ndarray, None] = None,
-    example_img_target: Union[np.ndarray, None] = None,
-    example_mean: Union[np.ndarray, None] = None,
-    example_std: Union[np.ndarray, None] = None,
-    predict_example_every_n_batches: int = 100,
 ) -> None:
     """
     Train the U-Net model using the specified data loader.
@@ -39,15 +34,6 @@ def train(
     """
     vmin = -np.inf
     vmax = np.inf
-    if not example_img is None:
-        os.makedirs("example", exist_ok=True)
-        example_img = torch.tensor(example_img, dtype=torch.float)  # type: ignore
-        if not example_img_target is None:
-            vmin = np.min(example_img_target)
-            vmax = np.max(example_img_target)
-            plot_img(
-                example_img_target, f"example/groundtruth.png", vmin=vmin, vmax=vmax
-            )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learningrate)
@@ -73,25 +59,6 @@ def train(
                 print(
                     f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
                 )
-            if (
-                i % predict_example_every_n_batches == 0
-                and not example_img is None
-                and not example_mean is None
-                and not example_std is None
-            ):
-                model.eval()
-                # prevent GPU OOM
-                model.to("cpu")
-                prediction = model(example_img)
-                prediction_np = np.array(prediction.detach())
-                prediction_np = prediction_np.reshape(
-                    prediction_np.shape[-2], prediction_np.shape[-1]
-                )
-                prediction_np = reverse_z_norm(prediction_np, example_mean, example_std)
-                plot_img(
-                    prediction_np, f"example/model_prediction_{i}-batch.png", vmin, vmax
-                )
-                model.to(device)
             i += 1
         dataloader.shuffle_array()
     history = np.array(history)

@@ -173,29 +173,24 @@ train_h5: '/path/to/train.h5'
 batch_size: 16
 learning_rate: 0.0001
 num_epochs: 1
-path_example_img: '/path/to/example.tiff'
-target_frame_example_img: 101
-predict_every_n_batches: 10000
 noise_center: 0.0
 noise_scale: 1.5
 ```
 
+
 Adjust the paths and parameters in the configuration file based on your specific setup and requirements. This configuration file will be used during the training process to specify various parameters further:
 
-## Training Configuration File Summary
+### Training Configuration File Summary
 
 | Argument                        | Description                                                            |
 |---------------------------------|------------------------------------------------------------------------|
-| `--modelpath`                     | Path to save the model after training                                  |
-| `--train_h5`                      | Path to the h5 file containing the training data                       |
-| `--batch_size`                    | Number of training examples utilized in one iteration                   |
-| `--learning_rate`                 | Rate at which the model's weights are updated during training           |
-| `--num_epochs`                    | Number of times the entire training dataset is passed through the network |
-| `--path_example_img`              | Path to an example image used for visualization of the training progress. Set to `''` if not used |
-| `--target_frame_example_img`      | Frame number in the example image used as the prediction target during training |
-| `--predict_every_n_batches`       | Frequency at which the model predicts outputs during training          |
-| `--noise_center`                  | Center of the noise added to the input data during training             |
-| `--noise_scale`                   | Scale of the noise added to the input data during training               |
+| `modelpath`                     | Path to save the model after training                                  |
+| `train_h5`                      | Path to the h5 file containing the training data                       |
+| `batch_size`                    | Number of training examples utilized in one iteration                   |
+| `learning_rate`                 | Rate at which the model's weights are updated during training           |
+| `num_epochs`                    | Number of times the entire training dataset is passed through the network |
+| `noise_center`                  | Center of the noise added to the input data during training             |
+| `noise_scale`                   | Scale of the noise added to the input data during training               |
 
 
 ## 3. Train the model
@@ -203,7 +198,7 @@ Adjust the paths and parameters in the configuration file based on your specific
 Run the training script by executing the following command:
 
 ```bash
-python -m deep_iglu_denoiser.start_training --trainconfigpath /path/to/trainconfig.yaml`
+python -m deep_iglu_denoiser.start_training -p /path/to/trainconfig.yaml`
 ```
 
 `--trainconfigpath (-p)`: Path to the train config YAML file containing training parameters.
