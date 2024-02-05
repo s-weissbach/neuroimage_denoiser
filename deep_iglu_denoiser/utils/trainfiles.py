@@ -18,8 +18,6 @@ class TrainFiles:
         self,
         fileendings: list[str],
         min_z_score: float,
-        frames_before_event: int,
-        frames_after_event: int,
         crop_size: int,
         roi_size: int,
         output_h5_file: str,
@@ -41,8 +39,6 @@ class TrainFiles:
         self.fileendings = fileendings
         self.min_z_score = min_z_score
         self.min_z_score_activity = min_z_score_activity
-        self.frames_before_event = frames_before_event
-        self.frames_after_event = frames_after_event
         self.crop_size = crop_size
         self.roi_size = roi_size
         self.output_h5_file = output_h5_file
@@ -206,12 +202,8 @@ class TrainFiles:
         frames_and_positions = get_frames_position(
             file_znorm,
             self.min_z_score,
-            self.frames_before_event,
-            self.frames_after_event,
             self.crop_size,
             self.roi_size,
-            stimulationframes,
-            self.n_frames,
             self.foreground_background_split,
         )
         print(f"Found {len(frames_and_positions)} example(s) in file {filepath}")
@@ -347,12 +339,8 @@ class TrainFiles:
         frames_and_positions = get_frames_position(
             mmap_znorm_file,
             self.min_z_score,
-            self.frames_before_event,
-            self.frames_after_event,
             self.crop_size,
             self.roi_size,
-            stimulationframes,
-            self.n_frames,
             self.foreground_background_split,
         )
 

@@ -60,18 +60,6 @@ def main() -> None:
         help="Minimum Z score to considered an activity (default: 1.5)",
     )
     parser.add_argument(
-        "--before",
-        type=int,
-        default=0,
-        help="Number of frames to add before a detected event, to also train to reconstruct the typical raise of the sensor. (default: 0)",
-    )
-    parser.add_argument(
-        "--after",
-        type=int,
-        default=0,
-        help="Number of frames to add after a detected event, to also train to reconstruct the typical decay of the sensor. (default: 0)",
-    )
-    parser.add_argument(
         "--activitymap",
         action="store_true",
         help="Search for active ROI without prior information.",
@@ -118,8 +106,6 @@ def main() -> None:
     roi_size = args.roi_size
     min_z_score = args.min_z_score
     min_z_score_activity = args.min_z_score_activity
-    frames_before_event = args.before
-    frames_after_event = args.after
     window_size = args.window_size
     activitymap = args.activitymap
     stimulationframes = (
@@ -142,8 +128,6 @@ def main() -> None:
     trainfiles = TrainFiles(
         fileendings=file_endings,
         min_z_score=min_z_score,
-        frames_before_event=frames_before_event,
-        frames_after_event=frames_after_event,
         crop_size=crop_size,
         roi_size=roi_size,
         output_h5_file=output_h5_file,

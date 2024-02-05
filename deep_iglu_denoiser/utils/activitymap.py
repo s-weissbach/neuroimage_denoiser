@@ -51,12 +51,8 @@ def compute_activitymap(img: np.ndarray, cropsize: int, roi_size: int) -> np.nda
 def get_frames_position(
     img: np.ndarray,
     min_z_score: float,
-    before: int,
-    after: int,
     cropsize: int = 32,
     roi_size: int = 4,
-    stimulationframes: list[int] = [],
-    n_frames: int = 1,
     foreground_background_split: float = 0.5,
 ) -> list[list[int]]:
     """
@@ -78,34 +74,6 @@ def get_frames_position(
     for example in above_z:
         frame, y, x = example
         frames_w_pos.append([int(frame), int(y * cropsize), int(x * cropsize)])
-        # raise and decay
-        for i in range(1, before + 1):
-            if int(frame) - 1 < 0:
-                continue
-            example_to_add = [int(frame) - i, int(y * cropsize), int(x * cropsize)]
-            if example_to_add in frames_w_pos:
-                continue
-            frames_w_pos.append(example_to_add)
-        for i in range(1, after + 1):
-            if int(frame) + i >= img.shape[0]:
-                continue
-            example_to_add = [int(frame) + i, int(y * cropsize), int(x * cropsize)]
-            if example_to_add in frames_w_pos:
-                continue
-            frames_w_pos.append(example_to_add)
-        # stimulation responses
-        for stimulation in stimulationframes:
-            for frame_after_stimulation in range(stimulation, stimulation + n_frames):
-                if frame_after_stimulation >= img.shape[0]:
-                    continue
-                example_to_add = [
-                    frame_after_stimulation,
-                    int(y * cropsize),
-                    int(x * cropsize),
-                ]
-                if example_to_add in frames_w_pos:
-                    continue
-                frames_w_pos.append(example_to_add)
     bg_images_to_select = (1 / foreground_background_split - 1) * len(frames_w_pos)
     below_z = np.argwhere(activitymap <= min_z_score)
     np.random.shuffle(below_z)
