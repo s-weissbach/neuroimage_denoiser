@@ -144,8 +144,6 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 | `--trainh5`               | `-t`          | Path to the output H5 file that will be created                  |
 | `--min_z_score`           | `-z`          | Minimum Z score to be considered an active ROI (default: 2)      |
 | `--min_z_score_activity`  | `-za`         | Minimum Z score to be considered a response, only used with stimulation based identification (default: 1.5) |
-| `--before`                |               | Number of frames to add before a detected event (default: 0)    |
-| `--after`                 |               | Number of frames to add after a detected event (default: 0)     |
 | `--activitymap`           |               | Extract synaptic responses without any prior information        |
 | `--stimulationframes`     |               | Frames in that stimulation was applied. Will extract responses of active regions from stimulationframe to stimulationframe + `--n_frames` |
 | `--n_frames`              |               | Number of frames to include after stimulation (default: 0) |
