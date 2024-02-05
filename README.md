@@ -9,7 +9,8 @@
   - [Prepare Training Data](#1-prepare-training-data)
   - [Prepare Config File](#2-prepare-config-file)
   - [Train the Model](#3-train-the-model)
-- [Utils](#Utils)
+- [Utils](#utils)
+  - [Filter h5 file](#filter-h5-file)  
 
 ## Overview
 
@@ -156,12 +157,16 @@ Example usage:
 
 **Stimulation**
 > [!NOTE]
-> Stimulation based identification does not consider bleach. Apply bleach correction before running this mode.
+> Stimulation based identification does not consider bleach. Apply bleach correction if needed before running this mode.
 
-`python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --min_z_score_activity 1.5 --stimulationframes 100 200 300 --n_frames 5 --fgsplit 0.8 --overwrite False --activitymap`
+``` bash
+python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --min_z_score_activity 1.5 --stimulationframes 100 200 300 --n_frames 5 --fgsplit 0.8 --overwrite False --activitymap
+```
 
 **Activitymap**
-`python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --activitymap --fgsplit 0.8 --overwrite False `
+``` bash
+python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --activitymap --fgsplit 0.8 --overwrite False
+```
 
 ## 2. Prepare config file
 
