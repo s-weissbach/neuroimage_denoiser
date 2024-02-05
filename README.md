@@ -131,7 +131,7 @@ There are two modes to create the trainings data.
    - applies rolling window z-normalization and identifies regions that exceed the `min_z_score` and the frame in that it happens
    - adds all stimulation responses of the selected regions, if `--stimulationframes` is set
 > [!NOTE]
-> Activitymap runs 6x slower, but will detect more events.
+> Activitymap runs 6x slower, but will detect more events. Stimulation based mode will only search for responses after the stimulation
 
 Use the `prepare_trainfiles` script to generate training data from a set of images. The script takes the following arguments:
 
@@ -143,6 +143,7 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 | `--roi_size`              |               | Expected ROI size; assumes detection square of (roi_size x roi_size) (default: 4) |
 | `--trainh5`               | `-t`          | Path to the output H5 file that will be created                  |
 | `--min_z_score`           | `-z`          | Minimum Z score to be considered an active ROI (default: 2)      |
+| `--min_z_score_activity`  | `-za`         | Minimum Z score to be considered a response, only used with stimulation based identification (default: 1.5) |
 | `--before`                |               | Number of frames to add before a detected event (default: 0)    |
 | `--after`                 |               | Number of frames to add after a detected event (default: 0)     |
 | `--activitymap`           |               | Extract synaptic responses without any prior information        |
