@@ -155,10 +155,13 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 Example usage:
 
 **Stimulation**
-`python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --stimulationframes 100 200 300 --n_frames 5 --fgsplit 0.8 --overwrite False --activitymap`
+> [!NOTE]
+> Stimulation based identification does not consider bleach. Apply bleach correction before running this mode.
+
+`python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --min_z_score_activity 1.5 --stimulationframes 100 200 300 --n_frames 5 --fgsplit 0.8 --overwrite False --activitymap`
 
 **Activitymap**
-`python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --before 0 --after 0 --window_size 50 --fgsplit 0.8 --overwrite False --activitymap`
+`python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --activitymap --fgsplit 0.8 --overwrite False `
 
 ## 2. Prepare config file
 
