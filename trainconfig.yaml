@@ -1,6 +1,6 @@
 modelpath: 'unet.pt'
 train_h5: '/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize4_stim_z2.h5'
-batch_size: 16
+batch_size: 64
 learning_rate: 0.0001
 num_epochs: 1
 path_example_img: '/run/media/stephan/Elements/igludata/martin_23-12-21/Glu_Cav2-1_+47_37a_R1-2.nd2'

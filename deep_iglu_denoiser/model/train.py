@@ -7,8 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
-import os
-from typing import Union
+from alive_progress import alive_bar
 
 
 def train(
@@ -32,34 +31,35 @@ def train(
     - example_img_path (str): Path to an example image for periodic model predictions (default is "").
     - predict_example_every_n_batches (int): Interval for making model predictions using the example image (default is 100).
     """
-    vmin = -np.inf
-    vmax = np.inf
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learningrate)
     criterion = nn.L1Loss()
     history = []
     # Training loop
+
     for _ in range(num_epochs):
         i = 0
-        while not dataloader.epoch_done:
-            batch_generated = dataloader.get_batch()
-            if not batch_generated:
-                break
-            data = dataloader.X.to(device)
-            targets = dataloader.y.to(device)
-            model.train()
-            outputs = model(data)
-            loss = criterion(outputs, targets)
-            history.append(loss.item())
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            if i % 10 == 0:
-                print(
-                    f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
-                )
-            i += 1
+        with alive_bar(dataloader.__len__()) as bar:
+            while not dataloader.epoch_done:
+                batch_generated = dataloader.get_batch()
+                if not batch_generated:
+                    break
+                data = dataloader.X.to(device)
+                targets = dataloader.y.to(device)
+                model.train()
+                outputs = model(data)
+                loss = criterion(outputs, targets)
+                history.append(loss.item())
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                if i % 10 == 0:
+                    print(
+                        f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
+                    )
+                bar()
+                i += 1
         dataloader.shuffle_array()
     history = np.array(history)
     plot_train_loss(history, f"example/train_loss.pdf")

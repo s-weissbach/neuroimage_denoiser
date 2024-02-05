@@ -41,7 +41,7 @@ class DataLoader:
         Returns:
             int: Number of train samples in the dataset.
         """
-        return len(self.train_samples)
+        return len(self.train_samples) // self.batch_size
 
     def shuffle_array(self) -> None:
         """
@@ -83,10 +83,9 @@ class DataLoader:
                 return False
             h5_idx = self.available_train_examples.pop(0)
             y_tmp = np.array(self.h5_file.get(h5_idx))
-            X_tmp = self.add_gausian_noise(y_tmp.copy())
-            for target, frame in zip(y_tmp, X_tmp):
-                self.y_list.append(target.reshape(1, target.shape[0], target.shape[1]))
-                self.X_list.append(frame.reshape(1, frame.shape[0], frame.shape[1]))
+            y_tmp = y_tmp.reshape(1, y_tmp.shape[0], y_tmp.shape[1])
+            self.y_list.append(y_tmp)
+            self.X_list.append(self.add_gausian_noise(y_tmp.copy()))
         self.X = torch.tensor(np.array(self.X_list), dtype=torch.float)
         self.X_list = []
         self.y = torch.tensor(np.array(self.y_list), dtype=torch.float)
