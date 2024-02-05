@@ -46,6 +46,20 @@ def main() -> None:
         help="Minimum Z score to be considered active patch (default: 2)",
     )
     parser.add_argument(
+        "--min_z_score",
+        "-z",
+        type=float,
+        default=2.0,
+        help="Minimum Z score to be considered active patch (default: 2)",
+    )
+    parser.add_argument(
+        "--min_z_score_activity",
+        "-za",
+        type=float,
+        default=1.5,
+        help="Minimum Z score to considered an activity (default: 1.5)",
+    )
+    parser.add_argument(
         "--before",
         type=int,
         default=0,
@@ -103,6 +117,7 @@ def main() -> None:
     crop_size = args.crop_size
     roi_size = args.roi_size
     min_z_score = args.min_z_score
+    min_z_score_activity = args.min_z_score_activity
     frames_before_event = args.before
     frames_after_event = args.after
     window_size = args.window_size
@@ -138,6 +153,7 @@ def main() -> None:
         n_frames=n_frames,
         foreground_background_split=fg_split,
         overwrite=overwrite,
+        min_z_score_activity=min_z_score_activity,
     )
 
     # gather train data

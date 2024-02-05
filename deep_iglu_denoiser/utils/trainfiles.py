@@ -23,6 +23,7 @@ class TrainFiles:
         crop_size: int,
         roi_size: int,
         output_h5_file: str,
+        min_z_score_activity: float = 1.5,
         window_size: int = 50,
         activitymap: bool = False,
         stimulationframes: list[int] = [],
@@ -39,6 +40,7 @@ class TrainFiles:
         """
         self.fileendings = fileendings
         self.min_z_score = min_z_score
+        self.min_z_score_activity = min_z_score_activity
         self.frames_before_event = frames_before_event
         self.frames_after_event = frames_after_event
         self.crop_size = crop_size
@@ -155,6 +157,7 @@ class TrainFiles:
         frames_and_positions = get_frames_position_stimframes(
             file,
             self.min_z_score,
+            self.min_z_score_activity,
             self.crop_size,
             self.roi_size,
             stimulationframes,
@@ -269,6 +272,7 @@ class TrainFiles:
         frames_and_positions = get_frames_position_stimframes(
             mmap_file,
             self.min_z_score,
+            self.min_z_score_activity,
             self.crop_size,
             self.roi_size,
             stimulationframes,

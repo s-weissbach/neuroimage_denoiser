@@ -119,7 +119,8 @@ def get_frames_position(
 
 def get_frames_position_stimframes(
     img: np.ndarray,
-    min_z_score: float,
+    min_z_score_detection: float,
+    min_z_score_activity: float,
     cropsize: int = 32,
     roi_size: int = 4,
     stimulationframes: list[int] = [],
@@ -129,13 +130,17 @@ def get_frames_position_stimframes(
     activitymap = compute_activitymap(img, cropsize, roi_size)
     # find all patches that had response
     activity_map_max_proj = np.max(activitymap, axis=0)
-    above_z = np.argwhere(activity_map_max_proj > min_z_score)
+    above_z = np.argwhere(activity_map_max_proj > min_z_score_detection)
     frames_w_pos = []
     for example in above_z:
         y, x = example
         for stimulation in stimulationframes:
             for frame_after_stimulation in range(stimulation, stimulation + n_frames):
                 if frame_after_stimulation >= img.shape[0]:
+                    continue
+                if not np.any(
+                    activitymap[frame_after_stimulation, y, x] > min_z_score_activity
+                ):
                     continue
                 example_to_add = [
                     frame_after_stimulation,
@@ -144,7 +149,7 @@ def get_frames_position_stimframes(
                 ]
                 frames_w_pos.append(example_to_add)
     bg_images_to_select = (1 / foreground_background_split - 1) * len(frames_w_pos)
-    below_z = np.argwhere(activitymap <= min_z_score)
+    below_z = np.argwhere(activitymap <= min_z_score_detection)
     np.random.shuffle(below_z)
     i = 0
     while True:
