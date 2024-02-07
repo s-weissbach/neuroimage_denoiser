@@ -24,6 +24,7 @@ def main(input_h5: str, output_h5: str, min_z: float, roi_size: int) -> None:
                     print(f"Wrote {idx} files to the filtered h5-file.")
             bar()
     f_out.close()
+    f_in.close()
     print(f"Kept {idx} of {num_samples} examples.")
 
 
