@@ -2,6 +2,7 @@ from deep_iglu_denoiser.model.unet import UNet
 import deep_iglu_denoiser.utils.normalization as normalization
 from deep_iglu_denoiser.utils.write_file import write_file
 from deep_iglu_denoiser.utils.open_file import open_file
+from deep_iglu_denoiser.utils.convert import float_to_uint
 import torch
 import numpy as np
 
@@ -53,7 +54,9 @@ class ModelWrapper:
         - weights (str): Path to the pre-trained weights file.
         """
         if self.device == "cpu":
-            self.model.load_state_dict(torch.load(weights, map_location=torch.device("cpu")))
+            self.model.load_state_dict(
+                torch.load(weights, map_location=torch.device("cpu"))
+            )
         else:
             self.model.load_state_dict(torch.load(weights))
         self.model.eval()
@@ -120,7 +123,7 @@ class ModelWrapper:
             np.array(denoised_image_sequence), self.img_mean, self.img_std
         )
         # tiff format is based on uint16 -> cast
-        self.denoised_img = self.denoised_img.astype(np.uint16)
+        self.denoised_img = float_to_uint(self.denoised_img)
 
     def write_denoised_img(self, outpath: str) -> None:
         if self.denoised_img.shape[0] == 0:
