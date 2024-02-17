@@ -16,8 +16,8 @@ def main(input_h5: str, output_h5: str, min_z: float, roi_size: int) -> None:
     with alive_bar(num_samples) as bar:
         for i in range(num_samples):
             frame = np.array(f_in.get(str(i)))
-            mean_frame = uniform_filter(frame, 4, mode="constant")
-            if np.any(mean_frame > 1.5):
+            mean_frame = uniform_filter(frame, roi_size, mode="constant")
+            if np.any(mean_frame > min_z):
                 f_out.create_dataset(str(idx), data=frame)
                 idx += 1
                 if idx % 1_000 == 0:
