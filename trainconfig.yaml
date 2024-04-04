@@ -3,10 +3,5 @@ train_h5: '/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize6_stim_z
 batch_size: 64
 learning_rate: 0.0001
 num_epochs: 2
-noise_center: 0
-noise_scale: 2.5
-out_of_focus_probability: 0.0
-min_size: 25
-max_size: 100
-min_intensity: 0.10
-max_intensity: 1
+pre_frames: 5
+post_frames: 5

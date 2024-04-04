@@ -31,11 +31,11 @@ def main() -> None:
     batch_size = trainconfig["batch_size"]
     learning_rate = trainconfig["learning_rate"]
     num_epochs = trainconfig["num_epochs"]
-    noise_center = trainconfig["noise_center"]
-    noise_scale = trainconfig["noise_scale"]
+    pre_frames = trainconfig["pre_frames"]
+    post_frames = trainconfig["post_frames"]
 
-    dataloader = DataLoader(train_h5, batch_size, noise_center, noise_scale)
-    model = UNet(1)
+    dataloader = DataLoader(train_h5, batch_size, pre_frames, post_frames)
+    model = UNet(pre_frames+post_frames)
 
     train(model, dataloader, num_epochs, learning_rate, modelpath)
 

@@ -8,8 +8,8 @@ class DataLoader:
         self,
         train_h5: str,
         batch_size: int,
-        noise_center: float = 0,
-        noise_scale: float = 1.5,
+        pre_frames: int = 5,
+        post_frames: int = 5
     ):
         """
         Initialize the dataset with HDF5 file, batch size, and optional noise parameters.
@@ -24,8 +24,8 @@ class DataLoader:
         self.h5_file = h5py.File(train_h5, "r")
         self.train_samples = list(self.h5_file.keys())
         self.batch_size = batch_size
-        self.noise_center = noise_center
-        self.noise_scale = noise_scale
+        self.pre_frames = pre_frames
+        self.post_Frames = post_frames
         self.epoch_done = False
         print(
             f"Found {len(self.train_samples)} samples to train. \n Batch size is {self.batch_size} -> {len(self.train_samples)//self.batch_size} iterations per epoch."
@@ -54,19 +54,6 @@ class DataLoader:
             self.train_samples[idx] for idx in random_order
         ]
 
-    def add_gausian_noise(self, arr: np.ndarray) -> np.ndarray:
-        """
-        Add gausian noise to an image or image sequence for training.
-
-        Parameters:
-        - arr (np.ndarray): original array to that the noise should be added
-
-        Returns:
-        - arr (np.ndarray): array with added noise
-        """
-        noise = np.random.normal(self.noise_center, self.noise_scale, size=arr.shape)
-        return np.add(arr, noise)
-
     def get_batch(self) -> bool:
         """
         Get a batch of training examples.
@@ -82,8 +69,9 @@ class DataLoader:
                 self.epoch_done = True
                 return False
             h5_idx = self.available_train_examples.pop(0)
-            y_tmp = np.array(self.h5_file.get(h5_idx))
-            y_tmp = y_tmp.reshape(1, y_tmp.shape[0], y_tmp.shape[1])
+            X_tmp = np.array(self.h5_file.get(h5_idx))
+            y_tmp = X_tmp[self.pre_frames,:,:].copy().reshape(1, y_tmp.shape[0], y_tmp.shape[1])
+            X_tmp = np.delete(X_tmp,self.n_pre,axis=0)
             self.y_list.append(y_tmp)
             self.X_list.append(self.add_gausian_noise(y_tmp.copy()))
         self.X = torch.tensor(np.array(self.X_list), dtype=torch.float)
