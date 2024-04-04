@@ -155,8 +155,9 @@ class TrainFiles:
         # create dict to be stored as h5 file
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
-            from_frame = max(target_frame-self.pre_frames,0)
-            to_frame = min(target_frame+self.post_frames,file.shape[0])
+            from_frame = target_frame-self.pre_frames
+            to_frame = target_frame+self.post_frames+1
+            if from_frame < 0 or to_frame > file.shape[0]: continue
             example = file[
                 from_frame:to_frame,
                 y_pos : y_pos + self.crop_size,
@@ -196,8 +197,9 @@ class TrainFiles:
         # create dict to be stored as h5 file
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
-            from_frame = max(target_frame-self.pre_frames,0)
-            to_frame = min(target_frame+self.post_frames,file.shape[0])
+            from_frame = target_frame-self.pre_frames
+            to_frame = target_frame+self.post_frames+1
+            if from_frame < 0 or to_frame > file.shape[0]: continue
             example = file[
                 from_frame:to_frame,
                 y_pos : y_pos + self.crop_size,
