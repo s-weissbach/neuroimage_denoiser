@@ -46,13 +46,6 @@ def main() -> None:
         help="Minimum Z score to be considered active patch (default: 2)",
     )
     parser.add_argument(
-        "--min_z_score",
-        "-z",
-        type=float,
-        default=2.0,
-        help="Minimum Z score to be considered active patch (default: 2)",
-    )
-    parser.add_argument(
         "--min_z_score_activity",
         "-za",
         type=float,
@@ -93,10 +86,16 @@ def main() -> None:
         help="Overwrite existing h5 file. If false, data will be appended. (default: False)",
     )
     parser.add_argument(
-        "--memory_optimized",
-        type=bool,
-        default=False,
-        help="Utilize optimized memory mode. Trades speed for lower memory usage",
+        "--pre_frames",
+        type=int,
+        default=5,
+        help="Number of frames to include before detected event (default: 5)"
+    )
+    parser.add_argument(
+        "--post_frames",
+        type=int,
+        default=5,
+        help="Number of frames to include after detected event (default: 5)"
     )
     # parse arguments
     args = parser.parse_args()
@@ -117,7 +116,8 @@ def main() -> None:
     fg_split = args.fgsplit
     output_h5_file = args.trainh5
     overwrite = args.overwrite
-    memory_optimized = args.memory_optimized
+    pre_frames = args.pre_frames
+    post_frames = args.post_frames
 
     if not activitymap and len(stimulationframes) == 0:
         raise ValueError(
@@ -138,12 +138,13 @@ def main() -> None:
         foreground_background_split=fg_split,
         overwrite=overwrite,
         min_z_score_activity=min_z_score_activity,
+        pre_frames=pre_frames,
+        post_frames=post_frames
     )
 
     # gather train data
     trainfiles.files_to_traindata(
         directory=folder_path,
-        memory_optimized=memory_optimized,
     )
 
 
