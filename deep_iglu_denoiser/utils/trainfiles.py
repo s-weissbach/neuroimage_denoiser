@@ -99,7 +99,6 @@ class TrainFiles:
                     )
                 else:
                     self.handle_file(filepath)
-
                 bar()
 
         if memory_optimized:
@@ -118,8 +117,8 @@ class TrainFiles:
         if len(file.shape) <= 2:
             print(f"WARNING: skipped ({filepath}), not a series.")
             return
-        # find train examples with activity
-        file_znorm = normalization.rolling_window_z_norm(file, self.window_size)
+        # remove inital and last frames to avoid artifacts from start/end recording + rolling window normalization artifacts
+        file_znorm = normalization.rolling_window_z_norm(file, self.window_size)[self.window_size//2:(file.shape[0]-self.window_size//2)]
         # will go through all frames and extract events that within a meaned kernel exceed the
         # min_z_score threshold
         # returns a list of events in the form [frame, y-coord, x-coord]
@@ -140,6 +139,8 @@ class TrainFiles:
         # create dict to be stored as h5 file
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
+            # correct for frames that were removed from the begining
+            target_frame += self.window_size//2
             example = file[
                 target_frame,
                 y_pos : y_pos + self.crop_size,
@@ -175,10 +176,10 @@ class TrainFiles:
         mmap_znorm_file = np.memmap(
             mmap_znorm_file_path, dtype="float64", mode="w+", shape=file_shape
         )
-        # find train examples with activity
+        # remove inital and last frames to avoid artifacts from start/end recording + rolling window normalization artifacts
         znorm_file = normalization.rolling_window_z_norm_memory_optimized(
             mmap_file, self.window_size, directory
-        )
+        )[self.window_size//2:(mmap_file.shape[0]-self.window_size//2)]
         mmap_znorm_file[:] = znorm_file[:]
         # flush mmap to disk
         del znorm_file
@@ -208,6 +209,8 @@ class TrainFiles:
         hf = h5py.File(self.output_h5_file, "a")
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
+            # correct for frames that were removed from the begining
+            target_frame += self.window_size//2
             example = mmap_file[
                 target_frame,
                 y_pos : y_pos + self.crop_size,
