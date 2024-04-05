@@ -34,6 +34,8 @@ def train(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cpu":
         print("WARNING! Training on the CPU can be very (!) time consuming.")
+    else:
+        print('GPU ready')
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learningrate)
     criterion = nn.L1Loss()

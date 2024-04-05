@@ -65,7 +65,7 @@ conda activate deep_iglu_denoiser
 Run the following command to denoise images using the provided script:
 
 ```bash
-python -m deep_iglu_denoiser.denoise --path /path/to/images --modelpath /path/to/model_weights --directory_mode -o /output/path
+python -m deep_iglu_denoiser denoise --path /path/to/images --modelpath /path/to/model_weights --directory_mode -o /output/path
 ```
 
 > [!IMPORTANT]
@@ -97,13 +97,13 @@ If you require other file formats to be supported, feel free to open an issue on
 Denoise a single recording:
 
 ```bash
-python -m deep_iglu_denoiser.denoise --path /path/to/imagestack.tiff --modelpath /path/to/model.pt --outputpath /output/path
+python -m deep_iglu_denoiser denoise --path /path/to/imagestack.tiff --modelpath /path/to/model.pt --outputpath /output/path
 ```
 
 Denoise all recordings in a directory:
 
 ```bash
-python -m deep_iglu_denoiser.denoise --path /path/to/images_folder --modelpath /path/to/model_weights --directory_mode -o /output/path
+python -m deep_iglu_denoiser denoise --path /path/to/images_folder --modelpath /path/to/model_weights --directory_mode -o /output/path
 ```
 
 # Training a Custom Model
@@ -119,20 +119,10 @@ To train a custom model for denoising, follow these steps:
 > The recordings itself can be noisy.
 
 Prepare the creation by storing all recordings with **one sensor** in a directory `/path/to/traindata/`. 
-
-There are two modes to create the trainings data. 
-
-1. Stimulation based identification:
-   - requires `--stimulationframes` and `--n_frames`` as an input
-   - identifies active regions by maximum projection of the z-normalized image
-   - extracts all responses (regions of size ROI that exceeded the `min_z_score` in the maximum projection) for each stimulation
-2. Activitymap based identification:
-   - requires `--activitymap` flag to be set
+Activitymap based identification:
    - does not need recordings with stimulation
    - applies rolling window z-normalization and identifies regions that exceed the `min_z_score` and the frame in that it happens
-   - adds all stimulation responses of the selected regions, if `--stimulationframes` is set
-> [!NOTE]
-> Activitymap runs 6x slower, but will detect more events. Stimulation based mode will only search for responses after the stimulation
+
 
 Use the `prepare_trainfiles` script to generate training data from a set of images. The script takes the following arguments:
 
@@ -144,28 +134,14 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 | `--roi_size`              |               | Expected ROI size; assumes detection square of (roi_size x roi_size) (default: 4) |
 | `--trainh5`               | `-t`          | Path to the output H5 file that will be created                  |
 | `--min_z_score`           | `-z`          | Minimum Z score to be considered an active ROI (default: 2)      |
-| `--min_z_score_activity`  | `-za`         | Minimum Z score to be considered a response, only used with stimulation based identification (default: 1.5) |
-| `--activitymap`           |               | Extract synaptic responses without any prior information        |
-| `--stimulationframes`     |               | Frames in that stimulation was applied. Will extract responses of active regions from stimulationframe to stimulationframe + `--n_frames` |
-| `--n_frames`              |               | Number of frames to include after stimulation (default: 0) |
 | `--window_size`           | `-w`          | Number of frames used for rolling window z-normalization (default: 50) |
 | `--fgsplit`               | `-s`          | Foreground to background split (default: 0.5)                    |
 | `--overwrite`             |               | Overwrite existing H5 file. If false, data will be appended (default: False) |
 | `--memory_optimized`      |               | Execute preparation process with optimized memory usage. Increases execution time (default: False) |
 
 Example usage:
-
-**Stimulation**
-> [!NOTE]
-> Stimulation based identification does not consider bleach. Apply bleach correction if needed before running this mode.
-
 ``` bash
-python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --min_z_score_activity 1.5 --stimulationframes 100 200 300 --n_frames 5 --fgsplit 0.8 --overwrite False --activitymap
-```
-
-**Activitymap**
-``` bash
-python -m deep_iglu_denoiser.prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 4 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --activitymap --fgsplit 0.8 --overwrite False
+python -m deep_iglu_denoiser prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --fgsplit 0.8 --overwrite False
 ```
 
 ## 2. Prepare config file
@@ -201,7 +177,7 @@ Adjust the paths and parameters in the configuration file based on your specific
 Run the training script by executing the following command:
 
 ```bash
-python -m deep_iglu_denoiser.start_training -p /path/to/trainconfig.yaml`
+python -m deep_iglu_denoiser train -p /path/to/trainconfig.yaml`
 ```
 
 `--trainconfigpath (-p)`: Path to the train config YAML file containing training parameters.
@@ -224,5 +200,5 @@ We've included a convinience function to filter the h5-file with a new z-score, 
 ### Example
 
 ```bash
-python -m deep_iglu_denoiser.filter_h5 -i /path/to/input.h5 -o /path/to/output.h5 --min_z 2.0 --roi_size 4
+python -m deep_iglu_denoiser filter_h5 -i /path/to/input.h5 -o /path/to/output.h5 --min_z 3.0 --roi_size 6
 ```

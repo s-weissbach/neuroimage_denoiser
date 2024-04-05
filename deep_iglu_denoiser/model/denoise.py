@@ -1,11 +1,10 @@
-import argparse
 import os
 from alive_progress import alive_bar
 from deep_iglu_denoiser.model.modelwrapper import ModelWrapper
 from deep_iglu_denoiser.utils.copy_folder_structure import copy_folder_structure
 
 
-def main(
+def inference(
     path: str,
     modelpath: str,
     directory_mode: str,
@@ -70,67 +69,3 @@ def main(
             model.write_denoised_img(outfilepath)
             print(f"Saved image ({os.path.basename(filepath)}) as: {outfilepath}")
             bar()
-
-
-def parse_arguments():
-    """
-    Parse command line arguments.
-
-    Returns:
-        argparse.Namespace: Parsed arguments.
-    """
-    parser = argparse.ArgumentParser(description="Custom Argument Parser")
-
-    parser.add_argument(
-        "--path", "-p", type=str, required=True, help="Specify the path."
-    )
-    parser.add_argument(
-        "--modelpath", "-m", type=str, required=True, help="Path to modelweights."
-    )
-    parser.add_argument(
-        "--directory_mode", "-d", action="store_true", help="Enable directory mode."
-    )
-    parser.add_argument(
-        "--outputpath", "-o", type=str, required=True, help="Specify the output path."
-    )
-    parser.add_argument(
-        "--batchsize",
-        "-b",
-        type=int,
-        default=1,
-        help="Number of frames that are predicted at once.",
-    )
-    parser.add_argument("--cpu", action="store_true", help="Force CPU and not use GPU.")
-
-    args = parser.parse_args()
-
-    # Check if the specified path exists
-    if not os.path.exists(args.path):
-        raise argparse.ArgumentError(None, f"Path '{args.path}' does not exist.")
-
-    # Check if the specified path is a directory if directory_mode is enabled
-    if args.directory_mode and not os.path.isdir(args.path):
-        raise argparse.ArgumentError(None, f"Path '{args.path}' is not a directory.")
-
-    # Check if the specified path is a file if directory_mode is not enabled
-    if not args.directory_mode and not os.path.isfile(args.path):
-        raise argparse.ArgumentError(None, f"Path '{args.path}' is not a file.")
-
-    # Create the output directory if it doesn't exist
-    os.makedirs(args.outputpath, exist_ok=True)
-
-    return args
-
-
-if __name__ == "__main__":
-    # Parse command line arguments
-    args = parse_arguments()
-    # Call the main function with the parsed arguments
-    main(
-        args.path,
-        args.modelpath,
-        args.directory_mode,
-        args.outputpath,
-        args.batchsize,
-        args.cpu,
-    )
