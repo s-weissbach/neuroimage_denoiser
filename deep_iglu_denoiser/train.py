@@ -43,6 +43,4 @@ def main() -> None:
 if __name__ == "__main__":
     if torch.cuda.is_available():
         print("GPU ready")
-    else:
-        print("Warning: only CPU found")
     main()

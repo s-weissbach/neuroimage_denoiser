@@ -1,6 +1,6 @@
-modelpath: 'unet_z3_nc0_ns2.5.pt'
-train_h5: '/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize6_stim_z3_filtered.h5'
-batch_size: 64
+modelpath: 'unet_z3_deepinterpolation.pt'
+train_h5: '/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize6_z3_pre5_post5.h5'
+batch_size: 16
 learning_rate: 0.0001
 num_epochs: 2
 pre_frames: 5
