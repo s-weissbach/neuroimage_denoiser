@@ -104,8 +104,8 @@ class TrainFiles:
         if len(file.shape) <= 2:
             print(f"WARNING: skipped ({filepath}), not a series.")
             return
-        # find train examples with activity
-        file_znorm = normalization.rolling_window_z_norm(file, self.window_size)
+        # remove frames that can not be completly normalized to not be senestive to articfacts and the begining or the end of the recordings
+        file_znorm = normalization.rolling_window_z_norm(file, self.window_size)[self.window_size//2:(file.shape[0]-self.window_size//2)]
         # will go through all frames and extract events that within a meaned kernel exceed the
         # min_z_score threshold
         # returns a list of events in the form [frame, y-coord, x-coord]
@@ -126,6 +126,8 @@ class TrainFiles:
         # create dict to be stored as h5 file
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
+            # correct for shorter video 
+            target_frame += self.window_size//2
             from_frame = target_frame-self.pre_frames
             to_frame = target_frame+self.post_frames+1
             if from_frame < 0 or to_frame > file.shape[0]: continue
