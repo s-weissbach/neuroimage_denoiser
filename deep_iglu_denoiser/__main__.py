@@ -41,8 +41,7 @@ def main():
         help="Expected ROI size; assumes for detection square of (roi_size x roi_size) (default: 8)",
     )
     pre_training_p.add_argument(
-        "--trainh5",
-        "-t",
+        "--h5",
         required=True,
         help="Path to outputpath of the h5 file that will be created",
     )
@@ -85,7 +84,7 @@ def main():
     # Filter
     filter_p = subparsers.add_parser('filter')
     filter_p.add_argument(
-        "--input_h5", "-i", type=str, help="Path to the input H5 file", required=True
+        "--h5", type=str, help="Path to the input H5 file", required=True
     )
     filter_p.add_argument(
         "--output_h5", "-o", type=str, help="Path to the output H5 file", required=True
@@ -126,14 +125,14 @@ def main():
     args = parser.parse_args()
     if args.mode == 'prepare_training':
         trainfiles = TrainFiles(
-        fileendings=args.file_endings,
-        min_z_score=args.min_z_score,
-        crop_size=args.crop_size,
-        roi_size=args.roi_size,
-        output_h5_file=args.output_h5_file,
-        window_size=args.window_size,
-        foreground_background_split=args.fg_split,
-        overwrite=args.overwrite,
+            fileendings=args.fileendings,
+            min_z_score=args.min_z_score,
+            crop_size=args.crop_size,
+            roi_size=args.roi_size,
+            output_h5_file=args.h5,
+            window_size=args.window_size,
+            foreground_background_split=args.fg_split,
+            overwrite=args.overwrite,
         )
         # gather train data
         trainfiles.files_to_traindata(
@@ -147,19 +146,19 @@ def main():
         with open(trainconfigpath, "r") as f:
             trainconfig = yaml.safe_load(f)
         modelpath = trainconfig["modelpath"]
-        train_h5 = trainconfig["train_h5"]
+        h5 = trainconfig["train_h5"]
         batch_size = trainconfig["batch_size"]
         learning_rate = trainconfig["learning_rate"]
         num_epochs = trainconfig["num_epochs"]
         noise_center = trainconfig["noise_center"]
         noise_scale = trainconfig["noise_scale"]
-        dataloader = DataLoader(train_h5, batch_size, noise_center, noise_scale)
+        dataloader = DataLoader(h5, batch_size, noise_center, noise_scale)
         model = UNet(1)
         train(model, dataloader, num_epochs, learning_rate, modelpath)
     # filter
     elif args.mode == 'filter':
         # input
-        f_in = h5py.File(args.input_h5, "r")
+        f_in = h5py.File(args.h5, "r")
         # "/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize4_stim_z2_filtered.h5"
         f_out = h5py.File(args.output_h5, "w")
         idx = 0

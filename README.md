@@ -132,7 +132,7 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 | `--fileendings`           | `-f`          | List of file endings to consider                                 |
 | `--crop_size`             | `-c`          | Crop size used during training (default: 32)                     |
 | `--roi_size`              |               | Expected ROI size; assumes detection square of (roi_size x roi_size) (default: 4) |
-| `--trainh5`               | `-t`          | Path to the output H5 file that will be created                  |
+| `--h5`                    |               | Path to the output H5 file that will be created                  |
 | `--min_z_score`           | `-z`          | Minimum Z score to be considered an active ROI (default: 2)      |
 | `--window_size`           | `-w`          | Number of frames used for rolling window z-normalization (default: 50) |
 | `--fgsplit`               | `-s`          | Foreground to background split (default: 0.5)                    |
@@ -192,7 +192,7 @@ We've included a convinience function to filter the h5-file with a new z-score, 
 
 | Flag        | Shorthand | Description                          |
 | ----------- | --------- | ------------------------------------ |
-| --input_h5  | -i        | Path to the input H5 file            |
+| --h5        |           | Path to the input H5 file            |
 | --output_h5 | -o        | Path to the output H5 file           |
 | --min_z     | -z        | Minimum Z value for filtering        |
 | --roi_size  | -r        | Size of the Region of Interest (ROI) |
