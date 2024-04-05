@@ -32,6 +32,8 @@ def train(
     - predict_example_every_n_batches (int): Interval for making model predictions using the example image (default is 100).
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device == "cpu":
+        print("WARNING! Training on the CPU can be very (!) time consuming.")
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learningrate)
     criterion = nn.L1Loss()
