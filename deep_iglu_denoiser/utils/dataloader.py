@@ -5,11 +5,7 @@ import h5py
 
 class DataLoader:
     def __init__(
-        self,
-        train_h5: str,
-        batch_size: int,
-        pre_frames: int = 5,
-        post_frames: int = 5
+        self, train_h5: str, batch_size: int, pre_frames: int = 5, post_frames: int = 5
     ):
         """
         Initialize the dataset with HDF5 file, batch size, and optional noise parameters.
@@ -70,10 +66,14 @@ class DataLoader:
                 return False
             h5_idx = self.available_train_examples.pop(0)
             X_tmp = np.array(self.h5_file.get(h5_idx))
-            y_tmp = X_tmp[self.pre_frames,:,:].copy().reshape(1, y_tmp.shape[0], y_tmp.shape[1])
-            X_tmp = np.delete(X_tmp,self.n_pre,axis=0)
+            y_tmp = (
+                X_tmp[self.pre_frames, :, :]
+                .copy()
+                .reshape(1, X_tmp.shape[1], X_tmp.shape[2])
+            )
+            X_tmp = np.delete(X_tmp, self.pre_frames, axis=0)
             self.y_list.append(y_tmp)
-            self.X_list.append(self.add_gausian_noise(y_tmp.copy()))
+            self.X_list.append(X_tmp)
         self.X = torch.tensor(np.array(self.X_list), dtype=torch.float)
         self.X_list = []
         self.y = torch.tensor(np.array(self.y_list), dtype=torch.float)
