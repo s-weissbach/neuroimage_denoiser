@@ -4,13 +4,9 @@ import numpy as np
 import h5py
 from alive_progress import alive_bar
 import deep_iglu_denoiser.utils.normalization as normalization
-from deep_iglu_denoiser.utils.activitymap import (
-    get_frames_position,
-    get_frames_position_stimframes,
-)
-from deep_iglu_denoiser.utils.open_file import open_file
+from deep_iglu_denoiser.utils.activitymap import get_frames_position
 
-import time
+from deep_iglu_denoiser.utils.open_file import open_file
 
 
 class TrainFiles:
@@ -21,11 +17,7 @@ class TrainFiles:
         crop_size: int,
         roi_size: int,
         output_h5_file: str,
-        min_z_score_activity: float = 1.5,
         window_size: int = 50,
-        activitymap: bool = False,
-        stimulationframes: list[int] = [],
-        n_frames: int = 1,
         foreground_background_split: float = 0.1,
         overwrite: bool = False,
     ) -> None:
@@ -38,14 +30,10 @@ class TrainFiles:
         """
         self.fileendings = fileendings
         self.min_z_score = min_z_score
-        self.min_z_score_activity = min_z_score_activity
         self.crop_size = crop_size
         self.roi_size = roi_size
         self.output_h5_file = output_h5_file
         self.window_size = window_size
-        self.activitymap = activitymap
-        self.stimulationframes = stimulationframes
-        self.n_frames = n_frames
         self.foreground_background_split = foreground_background_split
         self.overwrite = overwrite
         self.file_list = {}
@@ -106,17 +94,12 @@ class TrainFiles:
         with alive_bar(len(files_to_do)) as bar:
             for filepath in files_to_do:
                 if memory_optimized:
-                    if self.activitymap:
-                        self.handle_file_activitymap_memory_optimized(
-                            filepath, directory
-                        )
-                    else:
-                        self.handle_file_memory_optimized(filepath, directory)
+                    self.handle_file_memory_optimized(
+                        filepath, directory
+                    )
                 else:
-                    if self.activitymap:
-                        self.handle_file_activitymap(filepath)
-                    else:
-                        self.handle_file(filepath)
+                    self.handle_file(filepath)
+
                 bar()
 
         if memory_optimized:
@@ -125,6 +108,7 @@ class TrainFiles:
             os.remove(os.path.join(directory, "mmap_std.npy"))
             os.remove(os.path.join(directory, "mmap_mean.npy"))
         hf.close()
+
 
     def handle_file(
         self,
@@ -135,67 +119,7 @@ class TrainFiles:
             print(f"WARNING: skipped ({filepath}), not a series.")
             return
         # find train examples with activity
-        mean = np.mean(file, axis=0)
-        std = np.std(file, axis=0)
-        file = normalization.z_norm(file, mean, std)
-        if max(self.stimulationframes) >= file.shape[0]:
-            print(
-                f"WARNING: stimulationframes ({self.stimulationframes}) out of range of loaded file with number of frames ({file.shape[0]})."
-            )
-        stimulationframes = [
-            stimframe
-            for stimframe in self.stimulationframes
-            if stimframe < file.shape[0]
-        ]
-        # will go through all frames and extract events that within a meaned kernel exceed the
-        # min_z_score threshold
-        # returns a list of events in the form [frame, y-coord, x-coord]
-        frames_and_positions = get_frames_position_stimframes(
-            file,
-            self.min_z_score,
-            self.min_z_score_activity,
-            self.crop_size,
-            self.roi_size,
-            stimulationframes,
-            self.n_frames,
-            self.foreground_background_split,
-        )
-        print(f"Found {len(frames_and_positions)} example(s) in file {filepath}")
-        if len(frames_and_positions) == 0:
-            return
-
-        hf = h5py.File(self.output_h5_file, "a")
-        # create dict to be stored as h5 file
-        for event in frames_and_positions:
-            target_frame, y_pos, x_pos = event
-            example = file[
-                target_frame,
-                y_pos : y_pos + self.crop_size,
-                x_pos : x_pos + self.crop_size,
-            ]
-            hf.create_dataset(str(self.idx), data=example)
-            self.idx += 1
-        hf.close()
-
-    def handle_file_activitymap(
-        self,
-        filepath: str,
-    ) -> None:
-        file = open_file(filepath)
-        if len(file.shape) <= 2:
-            print(f"WARNING: skipped ({filepath}), not a series.")
-            return
-        # find train examples with activity
         file_znorm = normalization.rolling_window_z_norm(file, self.window_size)
-        if max(self.stimulationframes) >= file.shape[0]:
-            print(
-                f"WARNING: stimulationframes ({self.stimulationframes}) out of range of loaded file with number of frames ({file.shape[0]})."
-            )
-        stimulationframes = [
-            stimframe
-            for stimframe in self.stimulationframes
-            if stimframe < file.shape[0]
-        ]
         # will go through all frames and extract events that within a meaned kernel exceed the
         # min_z_score threshold
         # returns a list of events in the form [frame, y-coord, x-coord]
@@ -225,72 +149,7 @@ class TrainFiles:
             self.idx += 1
         hf.close()
 
-    def handle_file_memory_optimized(self, filepath: str, directory: str) -> None:
-        file = open_file(filepath)
-        if len(file.shape) <= 2:
-            print(f"WARNING: skipped ({filepath}), not a series.")
-            return
-        if max(self.stimulationframes) >= file.shape[0]:
-            print(
-                f"WARNING: stimulationframes ({self.stimulationframes}) out of range of loaded file with number of frames ({file.shape[0]})."
-            )
-        stimulationframes = [
-            stimframe
-            for stimframe in self.stimulationframes
-            if stimframe < file.shape[0]
-        ]
-        # -- numpy memmaps --
-        mmap_file_path = os.path.join(directory, "mmap_time_file.npy")
-        file_shape = file.shape
-        np.save(mmap_file_path, file)
-        # wrap memmap around file on disk
-        mmap_file = np.memmap(
-            mmap_file_path, dtype="float64", mode="w+", shape=file_shape
-        )
-        mmap_file[:] = file[:]
-        # clear ram by removing file
-        del file
-        # flush mmap to disk
-        mmap_file.flush()
-
-        mean = np.mean(mmap_file, axis=0)
-        std = np.std(mmap_file, axis=0)
-
-        mmap_file[:] = normalization.z_norm(mmap_file, mean, std)[:]
-
-        # will go through all frames and extract events that within a meaned kernel exceed the
-        # min_z_score threshold
-        # returns a list of events in the form [frame, y-coord, x-coord]
-        frames_and_positions = get_frames_position_stimframes(
-            mmap_file,
-            self.min_z_score,
-            self.min_z_score_activity,
-            self.crop_size,
-            self.roi_size,
-            stimulationframes,
-            self.n_frames,
-            self.foreground_background_split,
-        )
-
-        print(f"Found {len(frames_and_positions)} example(s) in file {filepath}")
-
-        if len(frames_and_positions) == 0:
-            return
-
-        hf = h5py.File(self.output_h5_file, "a")
-        # create dict to be stored as h5 file
-        for event in frames_and_positions:
-            target_frame, y_pos, x_pos = event
-            example = mmap_file[
-                target_frame,
-                y_pos : y_pos + self.crop_size,
-                x_pos : x_pos + self.crop_size,
-            ]
-            hf.create_dataset(str(self.idx), data=example)
-            self.idx += 1
-        hf.close()
-
-    def handle_file_activitymap_memory_optimized(
+    def handle_file_memory_optimized(
         self, filepath: str, directory: str
     ) -> None:
         file = open_file(filepath)
@@ -324,15 +183,6 @@ class TrainFiles:
         # flush mmap to disk
         del znorm_file
         mmap_znorm_file.flush()
-        if max(self.stimulationframes) >= mmap_znorm_file.shape[0]:
-            print(
-                f"WARNING: stimulationframes ({self.stimulationframes}) out of range of loaded file with number of frames ({mmap_znorm_file.shape[0]})."
-            )
-        stimulationframes = [
-            stimframe
-            for stimframe in self.stimulationframes
-            if stimframe < mmap_znorm_file.shape[0]
-        ]
         # will go through all frames and extract events that within a meaned kernel exceed the
         # min_z_score threshold
         # returns a list of events in the form [frame, y-coord, x-coord]

@@ -53,26 +53,6 @@ def main() -> None:
         help="Minimum Z score to be considered active patch (default: 2)",
     )
     parser.add_argument(
-        "--min_z_score_activity",
-        "-za",
-        type=float,
-        default=1.5,
-        help="Minimum Z score to considered an activity (default: 1.5)",
-    )
-    parser.add_argument(
-        "--activitymap",
-        action="store_true",
-        help="Search for active ROI without prior information.",
-    )
-    parser.add_argument(
-        "--stimulationframes",
-        nargs="+",
-        help="List of frames that were stimulated and thus activity is expected",
-    )
-    parser.add_argument(
-        "--n_frames", type=int, help="Number of frames to include after stimulation."
-    )
-    parser.add_argument(
         "--window_size",
         "-w",
         type=int,
@@ -88,14 +68,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--overwrite",
-        type=bool,
-        default=False,
+        action="store_true",
         help="Overwrite existing h5 file. If false, data will be appended. (default: False)",
     )
     parser.add_argument(
         "--memory_optimized",
-        type=bool,
-        default=False,
+        action="store_true",
         help="Utilize optimized memory mode. Trades speed for lower memory usage",
     )
     # parse arguments
@@ -105,25 +83,11 @@ def main() -> None:
     crop_size = args.crop_size
     roi_size = args.roi_size
     min_z_score = args.min_z_score
-    min_z_score_activity = args.min_z_score_activity
     window_size = args.window_size
-    activitymap = args.activitymap
-    stimulationframes = (
-        [int(frame) for frame in args.stimulationframes]
-        if args.stimulationframes
-        else []
-    )
-    n_frames = args.n_frames
     fg_split = args.fgsplit
     output_h5_file = args.trainh5
     overwrite = args.overwrite
     memory_optimized = args.memory_optimized
-
-    if not activitymap and len(stimulationframes) == 0:
-        raise ValueError(
-            "When not using --activitymap, you have to provide stimulationframes with --stimulationframes"
-        )
-
     # initalize TrainFiles class
     trainfiles = TrainFiles(
         fileendings=file_endings,
@@ -132,12 +96,8 @@ def main() -> None:
         roi_size=roi_size,
         output_h5_file=output_h5_file,
         window_size=window_size,
-        activitymap=activitymap,
-        stimulationframes=stimulationframes,
-        n_frames=n_frames,
         foreground_background_split=fg_split,
         overwrite=overwrite,
-        min_z_score_activity=min_z_score_activity,
     )
 
     # gather train data
