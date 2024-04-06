@@ -10,8 +10,8 @@ def main(
     modelpath: str,
     directory_mode: str,
     outputpath: str,
-    batch_size: int,
     cpu: bool,
+    n_frames: int,
 ) -> None:
     """
     Main function for denoising images using a trained model.
@@ -28,7 +28,7 @@ def main(
     outputpath = os.path.abspath(outputpath)
     path = os.path.abspath(path)
     # initalize model
-    model = ModelWrapper(modelpath, batch_size, cpu)
+    model = ModelWrapper(n_frames, modelpath, cpu)
     if directory_mode:
         # preserver original folderstructure
         copy_folder_structure(path, outputpath)
@@ -93,14 +93,14 @@ def parse_arguments():
     parser.add_argument(
         "--outputpath", "-o", type=str, required=True, help="Specify the output path."
     )
-    parser.add_argument(
-        "--batchsize",
-        "-b",
-        type=int,
-        default=1,
-        help="Number of frames that are predicted at once.",
-    )
     parser.add_argument("--cpu", action="store_true", help="Force CPU and not use GPU.")
+    parser.add_argument(
+        "--n_frames",
+        "-n",
+        type=int,
+        required=True,
+        help="Number of frames that the target frame is predicted on (n_pre+n_post from the training).",
+    )
 
     args = parser.parse_args()
 
@@ -131,6 +131,6 @@ if __name__ == "__main__":
         args.modelpath,
         args.directory_mode,
         args.outputpath,
-        args.batchsize,
         args.cpu,
+        args.n_frames,
     )

@@ -17,7 +17,7 @@ class ModelWrapper:
     - n_post (int): Number of frames to use after the target frame.
     """
 
-    def __init__(self, weights: str, batch_size: int, cpu: bool) -> None:
+    def __init__(self, n_frames: int, weights: str, cpu: bool) -> None:
         """
         Initialize the ModelWrapper.
 
@@ -28,14 +28,13 @@ class ModelWrapper:
         - n_pre (int): Number of frames to use before the target frame.
         - n_post (int): Number of frames to use after the target frame.
         """
-        # initalize model
-        self.batch_size = batch_size
+        self.n_frames = n_frames
         # check for GPU, use CPU otherwise
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # if flag cpu is set, use cpu regardless of available GPU
         if cpu:
             self.device = "cpu"
-        self.model = UNet(1)
+        self.model = UNet(n_frames)
         self.load_weights(weights)
         self.model.to(self.device)
         # initalize image
@@ -78,7 +77,7 @@ class ModelWrapper:
             self.img, self.img_mean, self.img_std
         )
 
-    def get_prediction_frames(self, from_frame: int) -> torch.Tensor:
+    def get_prediction_frames(self, target_frame: int) -> torch.Tensor:
         """
         Extract frames around the target frame for making predictions.
 
@@ -88,13 +87,21 @@ class ModelWrapper:
         Returns:
         - torch.Tensor: Input tensor for the U-Net model.
         """
-        to_frame = min(len(self.img), from_frame + self.batch_size)
+
         # extract frames
-        X = self.img[from_frame:to_frame]
+        from_frame = target_frame - (self.n_frames // 2)
+        to_frame = target_frame + (self.n_frames // 2 + 1)
+        X = self.img[
+            from_frame:to_frame,
+            :,
+            :,
+        ]
+        X = X.reshape(self.n_frames + 1, self.img_height, self.img_width)
+        X = np.delete(X, self.n_frames // 2, axis=0)
         # reshape to batch size 1
         X = X.reshape(
-            min(self.batch_size, to_frame - from_frame),
             1,
+            self.n_frames,
             self.img_height,
             self.img_width,
         )
@@ -112,8 +119,10 @@ class ModelWrapper:
         """
         denoised_image_sequence = []
         self.load_and_normalize_img(img_path)
-        for from_frame in range(0, self.img.shape[0], self.batch_size):
-            X = self.get_prediction_frames(from_frame).to(self.device)
+        for target_frame in range(
+            self.n_frames // 2, self.img.shape[0] - self.n_frames // 2
+        ):
+            X = self.get_prediction_frames(target_frame).to(self.device)
             y_pred = np.array(self.model(X).detach().to("cpu"))
             for denoised_frame in y_pred:
                 denoised_image_sequence.append(
