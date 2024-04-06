@@ -10,6 +10,8 @@ nohup.out
 # example files from training
 example/*
 example/*.png
+*.tiff
+*.tif
 
 
 # Byte-compiled / optimized / DLL files

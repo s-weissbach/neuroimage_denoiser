@@ -21,7 +21,8 @@ class TrainFiles:
         foreground_background_split: float = 0.1,
         overwrite: bool = False,
         pre_frames: int = 5,
-        post_frames: int = 5
+        post_frames: int = 5,
+        n_frames: int = 10,
     ) -> None:
         """
         Initialize TrainFiles object.
@@ -36,6 +37,7 @@ class TrainFiles:
         self.overwrite = overwrite
         self.pre_frames = pre_frames
         self.post_frames = post_frames
+        self.n_frames = n_frames
         self.file_list = {}
 
     def files_to_traindata(
@@ -95,7 +97,6 @@ class TrainFiles:
                 self.handle_file(filepath)
                 bar()
 
-
     def handle_file(
         self,
         filepath: str,
@@ -105,7 +106,9 @@ class TrainFiles:
             print(f"WARNING: skipped ({filepath}), not a series.")
             return
         # remove frames that can not be completly normalized to not be senestive to articfacts and the begining or the end of the recordings
-        file_znorm = normalization.rolling_window_z_norm(file, self.window_size)[self.window_size//2:(file.shape[0]-self.window_size//2)]
+        file_znorm = normalization.rolling_window_z_norm(file, self.window_size)[
+            self.window_size // 2 : (file.shape[0] - self.window_size // 2)
+        ]
         # will go through all frames and extract events that within a meaned kernel exceed the
         # min_z_score threshold
         # returns a list of events in the form [frame, y-coord, x-coord]
@@ -126,16 +129,20 @@ class TrainFiles:
         # create dict to be stored as h5 file
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
-            # correct for shorter video 
-            target_frame += self.window_size//2
-            from_frame = target_frame-self.pre_frames
-            to_frame = target_frame+self.post_frames+1
-            if from_frame < 0 or to_frame > file.shape[0]: continue
-            example = file[
-                from_frame:to_frame,
-                y_pos : y_pos + self.crop_size,
-                x_pos : x_pos + self.crop_size,
-            ]
-            hf.create_dataset(str(self.idx), data=example)
-            self.idx += 1
+            # correct for shorter video
+            target_frame += self.window_size // 2
+            for t_frame in range(
+                target_frame - self.n_frames // 2, target_frame + self.n_frames // 2
+            ):
+                from_frame = t_frame - self.pre_frames
+                to_frame = t_frame + self.post_frames + 1
+                if from_frame < 0 or to_frame > file.shape[0]:
+                    continue
+                example = file[
+                    from_frame:to_frame,
+                    y_pos : y_pos + self.crop_size,
+                    x_pos : x_pos + self.crop_size,
+                ]
+                hf.create_dataset(str(self.idx), data=example)
+                self.idx += 1
         hf.close()
