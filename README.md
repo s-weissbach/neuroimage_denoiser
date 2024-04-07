@@ -110,7 +110,7 @@ python -m deep_iglu_denoiser denoise --path /path/to/images_folder --modelpath /
 
 To train a custom model for denoising, follow these steps:
 
-## 1. Prepare Training Data
+## 1. Prepare Training
 
 > [!WARNING]
 > Potentially uses a lot of RAM. If you have limited RAM capicity use `--memory_optimized`. Beware that this will increase execution time.
@@ -141,7 +141,7 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 
 Example usage:
 ``` bash
-python -m deep_iglu_denoiser prepare_trainfiles --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --fgsplit 0.8 --overwrite False
+python -m deep_iglu_denoiser prepare_training --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --fgsplit 0.8 --overwrite False
 ```
 
 ## 2. Prepare config file
@@ -151,11 +151,11 @@ Create a `trainconfig.yaml` file with the following configuration settings.
 ```yaml
 modelpath: 'unet.pt'
 train_h5: '/path/to/train.h5'
-batch_size: 16
+batch_size: 32
 learning_rate: 0.0001
 num_epochs: 1
 noise_center: 0.0
-noise_scale: 1.5
+noise_scale: 2.0
 ```
 
 Adjust the paths and parameters in the configuration file based on your specific setup and requirements. This configuration file will be used during the training process to specify various parameters further:
