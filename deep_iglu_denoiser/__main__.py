@@ -11,11 +11,12 @@ from deep_iglu_denoiser.model.unet import UNet
 from deep_iglu_denoiser.model.train import train
 from deep_iglu_denoiser.model.denoise import inference
 
-def main():
-    parser = argparse.ArgumentParser(description='iGlu Denoiser')
-    subparsers = parser.add_subparsers(dest='mode')
 
-    pre_training_p = subparsers.add_parser('prepare_training')
+def main():
+    parser = argparse.ArgumentParser(description="iGlu Denoiser")
+    subparsers = parser.add_subparsers(dest="mode")
+
+    pre_training_p = subparsers.add_parser("prepare_training")
     pre_training_p.add_argument(
         "--path", "-p", required=True, help="Path to folder containing images"
     )
@@ -77,12 +78,12 @@ def main():
         help="Utilize optimized memory mode. Trades speed for lower memory usage",
     )
     # Training
-    train_p = subparsers.add_parser('train')
+    train_p = subparsers.add_parser("train")
     train_p.add_argument(
         "--trainconfigpath", "-p", required=True, help="Path to train config YAML file"
     )
     # Filter
-    filter_p = subparsers.add_parser('filter')
+    filter_p = subparsers.add_parser("filter")
     filter_p.add_argument(
         "--h5", type=str, help="Path to the input H5 file", required=True
     )
@@ -100,7 +101,7 @@ def main():
         required=True,
     )
     # Denoise / Inference
-    denoise_p = subparsers.add_parser('denoise')
+    denoise_p = subparsers.add_parser("denoise")
     denoise_p.add_argument(
         "--path", "-p", type=str, required=True, help="Specify the path."
     )
@@ -120,10 +121,12 @@ def main():
         default=1,
         help="Number of frames that are predicted at once.",
     )
-    denoise_p.add_argument("--cpu", action="store_true", help="Force CPU and not use GPU.")
-    
+    denoise_p.add_argument(
+        "--cpu", action="store_true", help="Force CPU and not use GPU."
+    )
+
     args = parser.parse_args()
-    if args.mode == 'prepare_training':
+    if args.mode == "prepare_training":
         trainfiles = TrainFiles(
             fileendings=args.fileendings,
             min_z_score=args.min_z_score,
@@ -131,16 +134,16 @@ def main():
             roi_size=args.roi_size,
             output_h5_file=args.h5,
             window_size=args.window_size,
-            foreground_background_split=args.fg_split,
+            foreground_background_split=args.fgsplit,
             overwrite=args.overwrite,
         )
         # gather train data
         trainfiles.files_to_traindata(
-            directory=args.folder_path,
+            directory=args.path,
             memory_optimized=args.memory_optimized,
         )
     # training
-    elif args.mode == 'train':
+    elif args.mode == "train":
         trainconfigpath = args.trainconfigpath
         # parse train config file
         with open(trainconfigpath, "r") as f:
@@ -149,6 +152,7 @@ def main():
         h5 = trainconfig["train_h5"]
         batch_size = trainconfig["batch_size"]
         learning_rate = trainconfig["learning_rate"]
+        lossfunction = trainconfig["lossfunction"]
         num_epochs = trainconfig["num_epochs"]
         noise_center = trainconfig["noise_center"]
         noise_scale = trainconfig["noise_scale"]
@@ -156,7 +160,7 @@ def main():
         model = UNet(1)
         train(model, dataloader, num_epochs, learning_rate, modelpath)
     # filter
-    elif args.mode == 'filter':
+    elif args.mode == "filter":
         # input
         f_in = h5py.File(args.h5, "r")
         # "/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize4_stim_z2_filtered.h5"
@@ -177,7 +181,7 @@ def main():
         f_in.close()
         print(f"Kept {idx} of {num_samples} examples.")
     # denoising / inference
-    elif args.mode == 'denoise':
+    elif args.mode == "denoise":
         inference(
             args.path,
             args.modelpath,
@@ -187,5 +191,6 @@ def main():
             args.cpu,
         )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

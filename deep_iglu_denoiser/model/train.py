@@ -1,7 +1,6 @@
 from deep_iglu_denoiser.model.unet import UNet
 from deep_iglu_denoiser.utils.dataloader import DataLoader
-from deep_iglu_denoiser.utils.normalization import reverse_z_norm
-from deep_iglu_denoiser.utils.plot import plot_img, plot_train_loss
+from deep_iglu_denoiser.utils.plot import plot_train_loss
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,6 +14,7 @@ def train(
     dataloader: DataLoader,
     num_epochs: int = 1,
     learningrate: float = 0.0001,
+    lossfunction: str = "L1",
     modelpath: str = "unet.pt",
     history_savepath: str = "train_loss.npy",
 ) -> None:
@@ -31,14 +31,25 @@ def train(
     - example_img_path (str): Path to an example image for periodic model predictions (default is "").
     - predict_example_every_n_batches (int): Interval for making model predictions using the example image (default is 100).
     """
+    lossfunctions = {
+        "L1": nn.L1Loss(),
+        "Smooth-L1": nn.SmoothL1Loss(),
+        "MSE": nn.MSELoss(),
+        "Crossentropy": nn.CrossEntropyLoss(),
+        "Huber": nn.HuberLoss(),
+    }
+    if lossfunction not in lossfunctions.keys():
+        raise NotImplementedError(
+            f"The selected loss function ('{lossfunction}) is not available. Select from {list(lossfunctions.keys())}."
+        )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cpu":
         print("WARNING! Training on the CPU can be very (!) time consuming.")
     else:
-        print('GPU ready')
+        print("GPU ready")
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learningrate)
-    criterion = nn.L1Loss()
+    criterion = lossfunctions[lossfunction]
     history = []
     # Training loop
 
