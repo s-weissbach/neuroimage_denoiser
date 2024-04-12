@@ -1,50 +1,60 @@
 from deep_iglu_denoiser.model.train import train
 from deep_iglu_denoiser.model.unet import UNet
 from deep_iglu_denoiser.utils.dataloader import DataLoader
+from deep_iglu_denoiser.utils.evaluate_model import evaluate, raw_evaluate
 
 import os
 import torch.nn as nn
 from alive_progress import alive_bar
 import yaml
+import json
 
 
-def gridsearch_train(trainconfigpath: str, keep_best_weights: bool = True) -> None:
-    # create outputfolder
-    modelfolder = os.absfolder(modelfolder)
-    if os.path.exists(modelfolder):
-        print(
-            f"WARNING! Outputfolder ('{modelfolder}) for gridsearch already exists. Existing models might be overwritten"
-        )
-    os.makedirs(modelfolder, exist_ok=True)
-    # prepare paramterspace
+def gridsearch_train(trainconfigpath: str) -> None:
     with open(trainconfigpath, "r") as f:
         trainconfig = yaml.safe_load(f)
     for key in [
         "train_h5",
         "batch_size",
         "learning_rate",
-        "num_epchs",
-        "noisescales",
-        "noisecenters",
+        "num_epochs",
+        "noise_scales",
+        "noise_centers",
         "gaussian_filter",
-        "sigma_gaussian_filter",
+        "gaussian_sigma",
         "loss_functions",
         "modelfolder",
+        "batch_size_inference",
+        "evaluation_img_path",
+        "evaluation_roi_folder",
+        "stimulation_frames",
+        "response_patience"
     ]:
         if key not in trainconfig:
             raise ValueError(
                 f"Did not find required parameter {key} in {trainconfigpath}."
             )
+    # create outputfolder
+    modelfolder = os.path.abspath(trainconfig["modelfolder"])
+    if os.path.exists(modelfolder):
+        print(
+            f"WARNING! Outputfolder ('{modelfolder}) for gridsearch already exists. Existing models might be overwritten"
+        )
+    os.makedirs(modelfolder, exist_ok=True)
+    tmp_folder = os.path.join(modelfolder, "tmp")
+    os.makedirs(tmp_folder, exist_ok=True)
+    # prepare paramterspace
+    
 
     parameterspace = []
     # maybe suboptimal solution and smth like itertools should be used
     total_parameters = 0
-    for ns in trainconfig["noisescale"]:
-        for nc in trainconfig["noisecenters"]:
+    for ns in trainconfig["noise_scales"]:
+        for nc in trainconfig["noise_centers"]:
             for lf in trainconfig["loss_functions"]:
                 for gf in trainconfig["gaussian_filter"]:
                     if gf:
-                        for sgf in trainconfig["sigma_gaussian_filter"]:
+                        for sgf in trainconfig["gaussian_sigma"]:
                             parameterspace.append([ns, nc, gf, lf, sgf])
                             total_parameters += 1
                     else:
@@ -52,8 +62,10 @@ def gridsearch_train(trainconfigpath: str, keep_best_weights: bool = True) -> No
     print(
         f"Parameterspace contains {total_parameters} and thus has to train {len(parameterspace)} model(s)."
     )
-
-    model_overview = []
+    print('Evaluate on raw image')
+    raw_result = raw_evaluate(trainconfig['evaluation_img_path'],trainconfig['evaluation_roi_folder'],trainconfig['stimulation_frames'],trainconfig['response_patience'])
+    with open(f'raw_performance.json','w') as outfile:
+        json.dump(raw_result,outfile)
     with alive_bar(len(parameterspace)) as bar:
         for ns, nc, gf, lf, sgf in parameterspace:
             modelname = f"unet_{lf}-loss_noisescale-{ns}_noisecenter-{nc}_gaussian-{gf}_sigma-{sgf}.pt"
@@ -80,5 +92,17 @@ def gridsearch_train(trainconfigpath: str, keep_best_weights: bool = True) -> No
                 lf,
                 modelpath,
                 history_savepath,
+                False
             )
+            # evaluate
+            results_model = evaluate(modelpath,
+                     tmp_folder,
+                     trainconfig['evaluation_img_path'],
+                     trainconfig['batch_size_inference'],
+                     trainconfig['evaluation_roi_folder'],
+                     trainconfig['stimulation_frames'],
+                     trainconfig['response_patience'],
+                     raw_result)
+            with open(f'unet_{lf}-loss_noisescale-{ns}_noisecenter-{nc}_gaussian-{gf}_sigma-{sgf}_performance.json','w') as outfile:
+                json.dump(results_model,outfile)
             bar()

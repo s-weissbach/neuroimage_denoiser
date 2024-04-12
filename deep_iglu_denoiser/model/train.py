@@ -17,6 +17,7 @@ def train(
     lossfunction: str = "L1",
     modelpath: str = "unet.pt",
     history_savepath: str = "train_loss.npy",
+    pbar: bool = True
 ) -> None:
     """
     Train the U-Net model using the specified data loader.
@@ -55,7 +56,28 @@ def train(
 
     for _ in range(num_epochs):
         i = 0
-        with alive_bar(dataloader.__len__()) as bar:
+        if pbar:
+            with alive_bar(dataloader.__len__()) as bar:
+                while not dataloader.epoch_done:
+                    batch_generated = dataloader.get_batch()
+                    if not batch_generated:
+                        break
+                    data = dataloader.X.to(device)
+                    targets = dataloader.y.to(device)
+                    model.train()
+                    outputs = model(data)
+                    loss = criterion(outputs, targets)
+                    history.append(loss.item())
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
+                    if i % 10 == 0:
+                        print(
+                            f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
+                        )
+                    bar()
+                    i += 1
+        else:
             while not dataloader.epoch_done:
                 batch_generated = dataloader.get_batch()
                 if not batch_generated:
@@ -73,7 +95,6 @@ def train(
                     print(
                         f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
                     )
-                bar()
                 i += 1
         dataloader.shuffle_array()
     history = np.array(history)

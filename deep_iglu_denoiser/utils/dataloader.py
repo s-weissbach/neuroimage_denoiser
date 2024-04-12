@@ -93,7 +93,7 @@ class DataLoader:
                     1, y_tmp.shape[0], y_tmp.shape[1]
                 )
             )
-            if self.self.apply_gausian_filter:
+            if self.apply_gausian_filter:
                 y_tmp = gaussian_filter(y_tmp, self.sigma_gausian_filter)
             y_tmp = y_tmp.reshape(1, y_tmp.shape[0], y_tmp.shape[1])
             self.y_list.append(y_tmp)

@@ -10,6 +10,7 @@ from deep_iglu_denoiser.utils.dataloader import DataLoader
 from deep_iglu_denoiser.model.unet import UNet
 from deep_iglu_denoiser.model.train import train
 from deep_iglu_denoiser.model.denoise import inference
+from deep_iglu_denoiser.model.gridsearch_train import gridsearch_train
 
 
 def main():
@@ -80,6 +81,11 @@ def main():
     # Training
     train_p = subparsers.add_parser("train")
     train_p.add_argument(
+        "--trainconfigpath", "-p", required=True, help="Path to train config YAML file"
+    )
+    # gridsearch training
+    gridtrain_p = subparsers.add_parser("gridsearch_train")
+    gridtrain_p.add_argument(
         "--trainconfigpath", "-p", required=True, help="Path to train config YAML file"
     )
     # Filter
@@ -168,6 +174,9 @@ def main():
         )
         model = UNet(1)
         train(model, dataloader, num_epochs, learning_rate, lossfunction, modelpath)
+    # gridsearch train
+    elif args.mode == "gridsearch_train":
+        gridsearch_train(args.trainconfigpath)
     # filter
     elif args.mode == "filter":
         # input
@@ -199,6 +208,8 @@ def main():
             args.batchsize,
             args.cpu,
         )
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":

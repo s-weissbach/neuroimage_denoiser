@@ -1,9 +1,17 @@
+# training parameters
 modelfolder: 'girdsearch_models'
 train_h5: '/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize6_stim_z3_filtered.h5'
 batch_size: 64
 learning_rate: 0.0001
-lossfunctions: ['L1','Smooth-L','MSE','Huber']
-noisescales: [0.5,0.75,1.0,1.25,1.5,1.75,2,2.5,2.75,3.0]
-noise_center: [0,0.5,1.0]
+loss_functions: ['L1','Smooth-L','MSE','Huber']
+noise_scales: [0.5,0.75,1.0,1.25,1.5,1.75,2,2.5,2.75,3.0]
+noise_centers: [0,0.5,1.0]
 gaussian_filter: [True, False]
 gaussian_sigma: [0.5,0.75,1.0,1.25,1.5]
+num_epochs: 1
+# evaluation parameters
+batch_size_inference: 5
+evaluation_img_path: '/home/stephan/Desktop/glu_test_data/raw/Glu-1Hz-Stim_20s_2_R2.tif'
+evaluation_roi_folder: '/home/stephan/Desktop/glu_test_data/R2-1_RoiSet'
+stimulation_frames: [100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900]
+response_patience: 5

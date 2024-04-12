@@ -7,10 +7,11 @@ from deep_iglu_denoiser.utils.copy_folder_structure import copy_folder_structure
 def inference(
     path: str,
     modelpath: str,
-    directory_mode: str,
+    directory_mode: False,
     outputpath: str,
     batch_size: int,
     cpu: bool,
+    pbar: bool = True,
 ) -> None:
     """
     Main function for denoising images using a trained model.
@@ -18,7 +19,7 @@ def inference(
     Args:
         path (str): Path to the input image or directory containing images.
         modelpath (str): Path to the model weights.
-        directory_mode (str): Flag to enable directory mode (True/False).
+        directory_mode (bool): Flag to enable directory mode (True/False).
         outputpath (str): Path to the output directory.
         batch_size (int): Number of frames predicted at once.
     """
@@ -54,8 +55,22 @@ def inference(
             )
         filelist = [path]
         outputpaths = [outputpath]
-
-    with alive_bar(len(filelist)) as bar:
+    if pbar:
+        with alive_bar(len(filelist)) as bar:
+            for filepath, outpath in zip(filelist, outputpaths):
+                filename = os.path.splitext(os.path.basename(filepath))[0]
+                outfilepath = os.path.join(outpath, f"{filename}_denoised.tif")
+                if os.path.exists(outfilepath):
+                    print(
+                        f"Skipped {filename}, because file already exists ({outfilepath})."
+                    )
+                    bar()
+                    continue
+                model.denoise_img(filepath)
+                model.write_denoised_img(outfilepath)
+                print(f"Saved image ({os.path.basename(filepath)}) as: {outfilepath}")
+                bar()
+    else:
         for filepath, outpath in zip(filelist, outputpaths):
             filename = os.path.splitext(os.path.basename(filepath))[0]
             outfilepath = os.path.join(outpath, f"{filename}_denoised.tif")
@@ -63,9 +78,6 @@ def inference(
                 print(
                     f"Skipped {filename}, because file already exists ({outfilepath})."
                 )
-                bar()
                 continue
             model.denoise_img(filepath)
             model.write_denoised_img(outfilepath)
-            print(f"Saved image ({os.path.basename(filepath)}) as: {outfilepath}")
-            bar()
