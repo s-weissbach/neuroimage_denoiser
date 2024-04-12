@@ -63,11 +63,15 @@ def gridsearch_train(trainconfigpath: str) -> None:
         f"Parameterspace contains {total_parameters} and thus has to train {len(parameterspace)} model(s)."
     )
     print('Evaluate on raw image')
-    raw_result = raw_evaluate(trainconfig['evaluation_img_path'],trainconfig['evaluation_roi_folder'],trainconfig['stimulation_frames'],trainconfig['response_patience'])
-    with open(f'raw_performance.json','w') as outfile:
+    raw_result = raw_evaluate(trainconfig['evaluation_img_path'],
+                              trainconfig['evaluation_roi_folder'],
+                              trainconfig['stimulation_frames'],
+                              trainconfig['response_patience'])
+    with open(os.path.join(modelfolder,f'raw_performance.json'),'w') as outfile:
         json.dump(raw_result,outfile)
     with alive_bar(len(parameterspace)) as bar:
-        for ns, nc, gf, lf, sgf in parameterspace:
+        for params in parameterspace:
+            ns, nc, gf, lf, sgf = params
             modelname = f"unet_{lf}-loss_noisescale-{ns}_noisecenter-{nc}_gaussian-{gf}_sigma-{sgf}.pt"
             modelpath = os.path.join(modelfolder, modelname)
             history_savepath = os.path.join(
@@ -94,6 +98,8 @@ def gridsearch_train(trainconfigpath: str) -> None:
                 history_savepath,
                 False
             )
+            model.to('cpu')
+            del model
             # evaluate
             results_model = evaluate(modelpath,
                      tmp_folder,
@@ -103,6 +109,6 @@ def gridsearch_train(trainconfigpath: str) -> None:
                      trainconfig['stimulation_frames'],
                      trainconfig['response_patience'],
                      raw_result)
-            with open(f'unet_{lf}-loss_noisescale-{ns}_noisecenter-{nc}_gaussian-{gf}_sigma-{sgf}_performance.json','w') as outfile:
+            with open(os.path.join(modelfolder,f'unet_{lf}-loss_noisescale-{ns}_noisecenter-{nc}_gaussian-{gf}_sigma-{sgf}_performance.json'),'w') as outfile:
                 json.dump(results_model,outfile)
             bar()

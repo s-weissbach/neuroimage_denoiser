@@ -93,7 +93,7 @@ def evaluate(
     response_patience: int,
     result_raw: dict
 ) -> dict:
-    use_cpu = torch.device(False if torch.cuda.is_available() else True)
+    use_cpu = not torch.cuda.is_available()
     stimulation_frames = sorted(stimulation_frames)
     # denoise image
     inference(img_path, modelpath, False, tmppath, batch_size, use_cpu, False)
@@ -118,9 +118,9 @@ def evaluate(
             mean_trace, threshold, stimulation_frames, response_patience
         )
         result[roi_name]["peak_frames"] = [int(frame) for frame in peak_frames]
-        result[roi_name]['peak_intensities'] = mean_trace[result['peak_frames']].tolist()
+        result[roi_name]['peak_intensities'] = mean_trace[result[roi_name]['peak_frames']].tolist()
         result[roi_name]['peak_intensities_match_raw_events'] = mean_trace[result_raw[roi_name]["peak_frames"]].tolist()
         noise_stds.append(np.std([val for i,val in enumerate(mean_trace) if i not in possible_response_frames]))
     result['noise_stds'] = float(np.mean(noise_stds))
-    
+    os.remove(os.path.join(tmppath,f'{img_name}_denoised.{fileending}'))
     return result
