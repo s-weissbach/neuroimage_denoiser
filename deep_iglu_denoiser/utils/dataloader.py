@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import h5py
+from scipy.ndimage import gaussian_filter
 
 
 class DataLoader:
@@ -10,6 +11,8 @@ class DataLoader:
         batch_size: int,
         noise_center: float = 0,
         noise_scale: float = 1.5,
+        apply_gausian_filter: bool = False,
+        sigma_gausian_filter: float = 1.0,
     ):
         """
         Initialize the dataset with HDF5 file, batch size, and optional noise parameters.
@@ -26,6 +29,8 @@ class DataLoader:
         self.batch_size = batch_size
         self.noise_center = noise_center
         self.noise_scale = noise_scale
+        self.apply_gausian_filter = apply_gausian_filter
+        self.sigma_gausian_filter = sigma_gausian_filter
         self.epoch_done = False
         print(
             f"Found {len(self.train_samples)} samples to train. \n Batch size is {self.batch_size} -> {len(self.train_samples)//self.batch_size} iterations per epoch."
@@ -83,9 +88,16 @@ class DataLoader:
                 return False
             h5_idx = self.available_train_examples.pop(0)
             y_tmp = np.array(self.h5_file.get(h5_idx))
+            self.X_list.append(
+                self.add_gausian_noise(y_tmp.copy()).reshape(
+                    1, y_tmp.shape[0], y_tmp.shape[1]
+                )
+            )
+            if self.self.apply_gausian_filter:
+                y_tmp = gaussian_filter(y_tmp, self.sigma_gausian_filter)
             y_tmp = y_tmp.reshape(1, y_tmp.shape[0], y_tmp.shape[1])
             self.y_list.append(y_tmp)
-            self.X_list.append(self.add_gausian_noise(y_tmp.copy()))
+
         self.X = torch.tensor(np.array(self.X_list), dtype=torch.float)
         self.X_list = []
         self.y = torch.tensor(np.array(self.y_list), dtype=torch.float)

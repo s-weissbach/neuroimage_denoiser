@@ -6,3 +6,5 @@ lossfunction: 'L1'
 num_epochs: 2
 noise_center: 0
 noise_scale: 1.5
+gausian_filter: True
+sigma_gausian_filter: 1.0

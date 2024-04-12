@@ -156,9 +156,18 @@ def main():
         num_epochs = trainconfig["num_epochs"]
         noise_center = trainconfig["noise_center"]
         noise_scale = trainconfig["noise_scale"]
-        dataloader = DataLoader(h5, batch_size, noise_center, noise_scale)
+        gausian_filter = trainconfig["gausian_filter"]
+        sigma_gausian_filter = trainconfig["sigma_gausian_filter"]
+        dataloader = DataLoader(
+            h5,
+            batch_size,
+            noise_center,
+            noise_scale,
+            gausian_filter,
+            sigma_gausian_filter,
+        )
         model = UNet(1)
-        train(model, dataloader, num_epochs, learning_rate, modelpath)
+        train(model, dataloader, num_epochs, learning_rate, lossfunction, modelpath)
     # filter
     elif args.mode == "filter":
         # input
