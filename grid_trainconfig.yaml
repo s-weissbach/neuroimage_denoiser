@@ -1,0 +1,9 @@
+modelfolder: 'girdsearch_models'
+train_h5: '/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize6_stim_z3_filtered.h5'
+batch_size: 64
+learning_rate: 0.0001
+lossfunctions: ['L1','Smooth-L','MSE','Huber']
+noisescales: [0.5,0.75,1.0,1.25,1.5,1.75,2,2.5,2.75,3.0]
+noise_center: [0,0.5,1.0]
+gaussian_filter: [True, False]
+gaussian_sigma: [0.5,0.75,1.0,1.25,1.5]
