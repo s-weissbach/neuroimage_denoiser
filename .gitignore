@@ -10,7 +10,8 @@ nohup.out
 # example files from training
 example/*
 example/*.png
-
+# working jupyter notebook
+work.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

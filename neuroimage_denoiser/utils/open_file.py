@@ -1,7 +1,7 @@
 import numpy as np
 import tifffile
 import nd2
-from deep_iglu_denoiser.utils.convert import uint_to_float
+from neuroimage_denoiser.utils.convert import uint_to_float
 
 
 def open_file(filepath: str) -> np.ndarray:

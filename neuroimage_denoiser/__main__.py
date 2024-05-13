@@ -5,12 +5,12 @@ from scipy.ndimage import uniform_filter
 import numpy as np
 import yaml
 
-from deep_iglu_denoiser.utils.trainfiles import TrainFiles
-from deep_iglu_denoiser.utils.dataloader import DataLoader
-from deep_iglu_denoiser.model.unet import UNet
-from deep_iglu_denoiser.model.train import train
-from deep_iglu_denoiser.model.denoise import inference
-from deep_iglu_denoiser.model.gridsearch_train import gridsearch_train
+from neuroimage_denoiser.utils.trainfiles import TrainFiles
+from neuroimage_denoiser.utils.dataloader import DataLoader
+from neuroimage_denoiser.model.unet import UNet
+from neuroimage_denoiser.model.train import train
+from neuroimage_denoiser.model.denoise import inference
+from neuroimage_denoiser.model.gridsearch_train import gridsearch_train
 
 
 def main():

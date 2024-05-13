@@ -1,6 +1,6 @@
-from deep_iglu_denoiser.model.unet import UNet
-from deep_iglu_denoiser.model.denoise import inference
-from deep_iglu_denoiser.utils.open_file import open_file
+from neuroimage_denoiser.model.unet import UNet
+from neuroimage_denoiser.model.denoise import inference
+from neuroimage_denoiser.utils.open_file import open_file
 
 import numpy as np
 from skimage.draw import disk

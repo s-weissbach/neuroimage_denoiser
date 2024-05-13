@@ -1,8 +1,8 @@
-from deep_iglu_denoiser.model.unet import UNet
-import deep_iglu_denoiser.utils.normalization as normalization
-from deep_iglu_denoiser.utils.write_file import write_file
-from deep_iglu_denoiser.utils.open_file import open_file
-from deep_iglu_denoiser.utils.convert import float_to_uint
+from neuroimage_denoiser.model.unet import UNet
+import neuroimage_denoiser.utils.normalization as normalization
+from neuroimage_denoiser.utils.write_file import write_file
+from neuroimage_denoiser.utils.open_file import open_file
+from neuroimage_denoiser.utils.convert import float_to_uint
 import torch
 import numpy as np
 

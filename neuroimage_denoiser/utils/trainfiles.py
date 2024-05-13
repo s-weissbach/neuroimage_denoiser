@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import h5py
 from alive_progress import alive_bar
-import deep_iglu_denoiser.utils.normalization as normalization
-from deep_iglu_denoiser.utils.activitymap import get_frames_position
+import neuroimage_denoiser.utils.normalization as normalization
+from neuroimage_denoiser.utils.activitymap import get_frames_position
 
-from deep_iglu_denoiser.utils.open_file import open_file
+from neuroimage_denoiser.utils.open_file import open_file
 
 
 class TrainFiles:

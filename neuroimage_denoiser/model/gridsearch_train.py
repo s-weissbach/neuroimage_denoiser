@@ -1,10 +1,9 @@
-from deep_iglu_denoiser.model.train import train
-from deep_iglu_denoiser.model.unet import UNet
-from deep_iglu_denoiser.utils.dataloader import DataLoader
-from deep_iglu_denoiser.utils.evaluate_model import evaluate, raw_evaluate
+from neuroimage_denoiser.model.train import train
+from neuroimage_denoiser.model.unet import UNet
+from neuroimage_denoiser.utils.dataloader import DataLoader
+from neuroimage_denoiser.utils.evaluate_model import evaluate, raw_evaluate
 
 import os
-import torch.nn as nn
 from alive_progress import alive_bar
 import yaml
 import json

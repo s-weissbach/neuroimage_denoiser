@@ -1,7 +1,7 @@
 import os
 from alive_progress import alive_bar
-from deep_iglu_denoiser.model.modelwrapper import ModelWrapper
-from deep_iglu_denoiser.utils.copy_folder_structure import copy_folder_structure
+from neuroimage_denoiser.model.modelwrapper import ModelWrapper
+from neuroimage_denoiser.utils.copy_folder_structure import copy_folder_structure
 
 
 def inference(

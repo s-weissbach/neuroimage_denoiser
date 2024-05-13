@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "deep_iglu_denoiser"
+name = "neuroimage_denoiser"
 version = "0.1.0"
 description = ""
 authors = ["Stephan Weißbach <s.weissbach@uni-mainz.de>"]
