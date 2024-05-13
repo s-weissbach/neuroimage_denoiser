@@ -26,6 +26,7 @@ def inference(
     valid_fileendings = [".tif", ".tiff", ".stk", ".nd2"]
     # ensure absolute path
     outputpath = os.path.abspath(outputpath)
+    os.makedirs(outputpath, exist_ok=True)
     path = os.path.abspath(path)
     # initalize model
     model = ModelWrapper(modelpath, batch_size, cpu)
