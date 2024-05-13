@@ -1,4 +1,4 @@
-# Deep iGlu Denoiser Documentation
+# Neuroimage Denoiser Documentation
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@
 
 ## Overview
 
-The Deep iGlu Denoiser is a powerful tool designed for denoising microscopic recordings, offering pre-trained model weights for the **iGlu-Snfr3 sensor** ready to use. This denoising is built upon the [U-Net](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28) model architecture. The model can be trained on any microscopic data, without the need for manual data curation.
+The Neuroimage Denoiser is a powerful tool designed for denoising microscopic recordings, offering pre-trained model weights for the **iGlu-Snfr3 sensor** ready to use. This denoising is built upon the [U-Net](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28) model architecture. The model can be trained on any microscopic data, without the need for manual data curation.
 
 | **raw**                                                                | denoised                                                                              |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -31,15 +31,15 @@ Follow these steps to set up Deep iGlu Denoiser:
 1. **Create a new enviorment:**
    
    ```bash
-   conda create -n deep_iglu_denoiser python=3.10 pip
-   conda activate deep_iglu_denoiser
+   conda create -n neuroimage_denoiser python=3.10 pip
+   conda activate neuroimage_denoiser
    ```
 
 2. **Clone the repository:**
    
    ```bash
-   git clone https://github.com/s-weissbach/deep_iglu_denoiser.git
-   cd deep_iglu_denoiser
+   git clone https://github.com/s-weissbach/neuroimage_denoiser.git
+   cd neuroimage_denoiser
    ```
 
 3. **Install:**
@@ -49,7 +49,7 @@ Follow these steps to set up Deep iGlu Denoiser:
    ```
 
 4. **Download pre-trained model:**
-   Download the pre-trained model from [the release page](https://github.com/s-weissbach/deep_iglu_denoiser/releases/) and place it in the project directory.
+   Download the pre-trained model from [the release page](https://github.com/s-weissbach/neuroimage_denoiser/releases/) and place it in the project directory.
 
 ## Usage
 
@@ -59,17 +59,17 @@ Follow these steps to set up Deep iGlu Denoiser:
 Activate the conda enviorment:
 
 ```bash
-conda activate deep_iglu_denoiser
+conda activate neuroimage_denoiser
 ```
 
 Run the following command to denoise images using the provided script:
 
 ```bash
-python -m deep_iglu_denoiser denoise --path /path/to/images --modelpath /path/to/model_weights --directory_mode -o /output/path
+python -m neuroimage_denoiser denoise --path /path/to/images --modelpath /path/to/model_weights --directory_mode -o /output/path
 ```
 
 > [!IMPORTANT]
-> Although the Deep iGlu Denoiser will work without a NVIDIA graphics card, it will run significantly slower. We highly recommend to only work on a server/PC with an available graphics card.
+> Although the Neuroimage Denoiser will work without a NVIDIA graphics card, it will run significantly slower. We highly recommend to only work on a server/PC with an available graphics card.
 
 ### Arguments:
 
@@ -97,13 +97,13 @@ If you require other file formats to be supported, feel free to open an issue on
 Denoise a single recording:
 
 ```bash
-python -m deep_iglu_denoiser denoise --path /path/to/imagestack.tiff --modelpath /path/to/model.pt --outputpath /output/path
+python -m neuroimage_denoiser denoise --path /path/to/imagestack.tiff --modelpath /path/to/model.pt --outputpath /output/path
 ```
 
 Denoise all recordings in a directory:
 
 ```bash
-python -m deep_iglu_denoiser denoise --path /path/to/images_folder --modelpath /path/to/model_weights --directory_mode -o /output/path
+python -m neuroimage_denoiser denoise --path /path/to/images_folder --modelpath /path/to/model_weights --directory_mode -o /output/path
 ```
 
 # Training a Custom Model
@@ -141,7 +141,7 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 
 Example usage:
 ``` bash
-python -m deep_iglu_denoiser prepare_training --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --fgsplit 0.8 --overwrite False
+python -m neuroimage_denoiser prepare_training --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --fgsplit 0.8 --overwrite False
 ```
 
 ## 2. Prepare config file
@@ -177,7 +177,7 @@ Adjust the paths and parameters in the configuration file based on your specific
 Run the training script by executing the following command:
 
 ```bash
-python -m deep_iglu_denoiser train -p /path/to/trainconfig.yaml`
+python -m neuroimage_denoiser train -p /path/to/trainconfig.yaml`
 ```
 
 `--trainconfigpath (-p)`: Path to the train config YAML file containing training parameters.
@@ -200,5 +200,5 @@ We've included a convinience function to filter the h5-file with a new z-score, 
 ### Example
 
 ```bash
-python -m deep_iglu_denoiser filter_h5 -i /path/to/input.h5 -o /path/to/output.h5 --min_z 3.0 --roi_size 6
+python -m neuroimage_denoiser filter_h5 -i /path/to/input.h5 -o /path/to/output.h5 --min_z 3.0 --roi_size 6
 ```
