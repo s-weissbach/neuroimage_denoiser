@@ -22,7 +22,7 @@ The Neuroimage Denoiser is a powerful tool designed for denoising microscopic re
 
 The Deep iGlu Denoiser maintains the amplitude heights and therefore does not alter subsequent analysis. 
 
-<img src="graphics/correlation_analysis.jpg" title="correlation" alt="correlation raw amplitudes to denoised amplitutes" width="420">
+<img src="graphics/correlation_analysis.png" title="correlation" alt="correlation raw amplitudes to denoised amplitutes" width="420">
 
 ## Getting started
 
