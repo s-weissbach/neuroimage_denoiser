@@ -1,5 +1,6 @@
 # no pytorch weights (size limitations of github)
 *.pt
+train_loss.pdf
 # csv files
 *.csv
 # numpy files
