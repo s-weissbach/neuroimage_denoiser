@@ -1,8 +1,8 @@
-from deep_iglu_denoiser.model.unet import UNet
-import deep_iglu_denoiser.utils.normalization as normalization
-from deep_iglu_denoiser.utils.write_file import write_file
-from deep_iglu_denoiser.utils.open_file import open_file
-from deep_iglu_denoiser.utils.convert import float_to_uint
+from neuroimage_denoiser.model.unet import UNet
+import neuroimage_denoiser.utils.normalization as normalization
+from neuroimage_denoiser.utils.write_file import write_file
+from neuroimage_denoiser.utils.open_file import open_file
+from neuroimage_denoiser.utils.convert import float_to_uint
 import torch
 import numpy as np
 
@@ -10,23 +10,27 @@ import numpy as np
 class ModelWrapper:
     """
     Wrapper class for a U-Net model used for image denoising.
-
-    Parameters:
-    - weights (str): Path to the pre-trained weights file.
-    - n_pre (int): Number of frames to use before the target frame.
-    - n_post (int): Number of frames to use after the target frame.
     """
 
     def __init__(self, n_frames: int, weights: str, cpu: bool) -> None:
         """
-        Initialize the ModelWrapper.
-
-        Initializes the U-Net model, loads pre-trained weights, and sets up device (GPU or CPU).
+        Initialize the ModelWrapper class for image denoising using a U-Net model.
 
         Parameters:
-        - weights (str): Path to the pre-trained weights file.
-        - n_pre (int): Number of frames to use before the target frame.
-        - n_post (int): Number of frames to use after the target frame.
+        - n_frames (int): Number of frames to consider for denoising.
+        - weights (str): Path to the pre-trained weights file for the U-Net model.
+        - cpu (bool): Flag to indicate whether to use CPU for inference, overriding GPU availability.
+
+        Attributes:
+        - n_frames (int): Number of frames used for denoising.
+        - device (torch.device): Device used for inference (CPU or GPU).
+        - model (UNet): U-Net model for image denoising.
+        - denoised_img (np.ndarray): Denoised image sequence.
+        - img (np.ndarray): Loaded image sequence.
+        - img_height (int): Height of the image frames.
+        - img_width (int): Width of the image frames.
+        - img_mean (np.ndarray): Mean pixel values of the image frames.
+        - img_std (np.ndarray): Standard deviation of pixel values of the image frames.
         """
         self.n_frames = n_frames
         # check for GPU, use CPU otherwise

@@ -1,10 +1,8 @@
-from deep_iglu_denoiser.model.unet import UNet
-from deep_iglu_denoiser.utils.dataloader import DataLoader
-from deep_iglu_denoiser.utils.normalization import reverse_z_norm
-from deep_iglu_denoiser.utils.plot import plot_img, plot_train_loss
+from neuroimage_denoiser.model.unet import UNet
+from neuroimage_denoiser.utils.dataloader import DataLoader
+from neuroimage_denoiser.utils.plot import plot_train_loss
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 from alive_progress import alive_bar
