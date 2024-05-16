@@ -5,23 +5,36 @@ import h5py
 
 class DataLoader:
     def __init__(
-        self, train_h5: str, batch_size: int, pre_frames: int = 5, post_frames: int = 5
+        self, 
+        train_h5: str,
+        batch_size: int,
+        n_frames: int
     ):
         """
-        Initialize the dataset with HDF5 file, batch size, and optional noise parameters.
+        Initialize the DataLoader class for loading training data from an HDF5 file.
 
-        Args:
-            train_h5 (str): Path to the HDF5 file containing training samples.
-            batch_size (int): Number of samples in each batch.
-            noise_center (float, optional): Center of the noise distribution. Default is 0.
-            noise_scale (float, optional): Scale of the noise distribution. Default is 1.5.
+        Parameters:
+        - train_h5 (str): Path to the HDF5 file containing training data.
+        - batch_size (int): Size of each batch during training.
+        - n_frames (int): Number of frames around the target frame.
+
+        Attributes:
+        - h5_file (h5py.File): HDF5 file object for accessing training data.
+        - train_samples (list): List of keys in the HDF5 file representing training samples.
+        - batch_size (int): Size of each batch during training.
+        - pre_frames (int): Number of frames before the target frame in each sample.
+        - post_Frames (int): Number of frames after the target frame in each sample.
+        - epoch_done (bool): Flag indicating whether the current epoch is completed.
+        - available_train_examples (list): List of available training examples for shuffling.
+        - X_list (list): List to store input frames for a batch.
+        - y_list (list): List to store target frames for a batch.
         """
         np.random.seed(42)
         self.h5_file = h5py.File(train_h5, "r")
         self.train_samples = list(self.h5_file.keys())
         self.batch_size = batch_size
-        self.pre_frames = pre_frames
-        self.post_Frames = post_frames
+        self.pre_frames = n_frames // 2
+        self.post_Frames = n_frames - self.pre_frames
         self.epoch_done = False
         print(
             f"Found {len(self.train_samples)} samples to train. \n Batch size is {self.batch_size} -> {len(self.train_samples)//self.batch_size} iterations per epoch."

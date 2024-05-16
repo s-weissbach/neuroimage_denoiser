@@ -1,12 +1,11 @@
 import os
-import pandas as pd
 import numpy as np
 import h5py
 from alive_progress import alive_bar
-import deep_iglu_denoiser.utils.normalization as normalization
-from deep_iglu_denoiser.utils.activitymap import get_frames_position
+import neuroimage_denoiser.utils.normalization as normalization
+from neuroimage_denoiser.utils.activitymap import get_frames_position
 
-from deep_iglu_denoiser.utils.open_file import open_file
+from neuroimage_denoiser.utils.open_file import open_file
 
 
 class TrainFiles:
@@ -20,8 +19,6 @@ class TrainFiles:
         window_size: int = 50,
         foreground_background_split: float = 0.1,
         overwrite: bool = False,
-        pre_frames: int = 5,
-        post_frames: int = 5,
         n_frames: int = 10,
     ) -> None:
         """
@@ -35,9 +32,8 @@ class TrainFiles:
         self.window_size = window_size
         self.foreground_background_split = foreground_background_split
         self.overwrite = overwrite
-        self.pre_frames = pre_frames
-        self.post_frames = post_frames
-        self.n_frames = n_frames
+        self.n_pre = n_frames // 2
+        self.n_post = self.n_pre - n_frames
         self.file_list = {}
 
     def files_to_traindata(
@@ -132,7 +128,7 @@ class TrainFiles:
             # correct for shorter video
             target_frame += self.window_size // 2
             for t_frame in range(
-                target_frame - self.n_frames // 2, target_frame + self.n_frames // 2
+                target_frame - self.n_pre, target_frame + self.n_post
             ):
                 from_frame = t_frame - self.pre_frames
                 to_frame = t_frame + self.post_frames + 1

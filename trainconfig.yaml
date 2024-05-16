@@ -3,5 +3,4 @@ train_h5: '/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize6_z3_pre
 batch_size: 16
 learning_rate: 0.0001
 num_epochs: 10
-pre_frames: 5
-post_frames: 5
+n_frames: 10
