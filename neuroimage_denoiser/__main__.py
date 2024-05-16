@@ -95,13 +95,6 @@ def main():
         "--outputpath", "-o", type=str, required=True, help="Specify the output path."
     )
     denoise_p.add_argument(
-        "--batchsize",
-        "-b",
-        type=int,
-        default=1,
-        help="Number of frames that are predicted at once.",
-    )
-    denoise_p.add_argument(
         "--cpu", action="store_true", help="Force CPU and not use GPU."
     )
 
@@ -125,24 +118,6 @@ def main():
         )
     # training
     elif args.mode == "train":
-        """
-        with open(trainconfigpath, "r") as f:
-            trainconfig = yaml.safe_load(f)
-        modelpath = trainconfig["modelpath"]
-        train_h5 = trainconfig["train_h5"]
-        batch_size = trainconfig["batch_size"]
-        learning_rate = trainconfig["learning_rate"]
-        num_epochs = trainconfig["num_epochs"]
-        pre_frames = trainconfig["pre_frames"]
-        post_frames = trainconfig["post_frames"]
-
-        dataloader = DataLoader(train_h5, batch_size, pre_frames, post_frames)
-        model = UNet(pre_frames+post_frames)
-
-        train(model, dataloader, num_epochs, learning_rate, modelpath)
-
-        """
-
         trainconfigpath = args.trainconfigpath
         # parse train config file
         with open(trainconfigpath, "r") as f:
@@ -151,7 +126,6 @@ def main():
         h5 = trainconfig["train_h5"]
         batch_size = trainconfig["batch_size"]
         learning_rate = trainconfig["learning_rate"]
-        lossfunction = trainconfig["lossfunction"]
         num_epochs = trainconfig["num_epochs"]
         n_frames = trainconfig["n_frames"]
         dataloader = DataLoader(
@@ -160,7 +134,7 @@ def main():
             n_frames
         )
         model = UNet(n_frames)
-        train(model, dataloader, num_epochs, learning_rate, lossfunction, modelpath)
+        train(model, dataloader, num_epochs, learning_rate, modelpath)
     # denoising / inference
     elif args.mode == "denoise":
         inference(
@@ -168,7 +142,6 @@ def main():
             args.modelpath,
             args.directory_mode,
             args.outputpath,
-            args.batchsize,
             args.cpu,
             args.n_frames
         )

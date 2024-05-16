@@ -62,6 +62,7 @@ def train(
                 i += 1
         dataloader.shuffle_array()
     history = np.array(history)
-    plot_train_loss(history, f"example/train_loss.pdf")
+
+    plot_train_loss(history, f"train_loss.pdf")
     np.save(history_savepath, history)
     torch.save(model.state_dict(), modelpath)
