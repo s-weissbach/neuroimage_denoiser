@@ -1,8 +1,4 @@
 import argparse
-from alive_progress import alive_bar
-import h5py
-from scipy.ndimage import uniform_filter
-import numpy as np
 import yaml
 
 from neuroimage_denoiser.utils.trainfiles import TrainFiles
