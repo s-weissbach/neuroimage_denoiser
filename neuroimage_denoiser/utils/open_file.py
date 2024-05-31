@@ -22,7 +22,7 @@ def open_file(filepath: str) -> np.ndarray:
     - .tif, .tiff, .stk (using tifffile library)
     """
     tiff_fileendings = [".tif", ".tiff", ".stk"]
-    if filepath.endswith("nd2"):
+    if filepath.endswith(".nd2"):
         return uint_to_float(nd2.imread(filepath))
     elif any([filepath.endswith(fileending) for fileending in tiff_fileendings]):
         return uint_to_float(tifffile.imread(filepath))
