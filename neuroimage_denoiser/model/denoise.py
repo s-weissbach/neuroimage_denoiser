@@ -67,9 +67,13 @@ def inference(
                     )
                     bar()
                     continue
-                model.denoise_img(filepath)
-                model.write_denoised_img(outfilepath)
-                print(f"Saved image ({os.path.basename(filepath)}) as: {outfilepath}")
+                try:
+                    model.denoise_img(filepath)
+                    model.write_denoised_img(outfilepath)
+                    print(f"Saved image ({os.path.basename(filepath)}) as: {outfilepath}")
+                except Exception as error:
+                    print(f"Skipped {filepath}, due to an unexpected error:")
+                    print(error)
                 bar()
     else:
         for filepath, outpath in zip(filelist, outputpaths):
