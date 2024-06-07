@@ -9,24 +9,33 @@ import numpy as np
 
 class ModelWrapper:
     """
-    Wrapper class for a U-Net model used for image denoising.
+    A wrapper class for a U-Net model used for denoising 3D image sequences.
 
-    Parameters:
-    - weights (str): Path to the pre-trained weights file.
-    - n_pre (int): Number of frames to use before the target frame.
-    - n_post (int): Number of frames to use after the target frame.
+    This class provides methods to load pre-trained weights, normalize input images,
+    perform denoising on image sequences, and write the denoised output to a file.
+
+    Attributes:
+        weights (str): Path to the pre-trained weights.
+        batch_size (int): Number of frames to process in each batch.
+        cpu (bool): Flag to force CPU usage, even if a GPU is available.
+        device (torch.device): Device to use for computations (GPU or CPU).
+        model (UNet): The U-Net model instance.
+        denoised_img (np.ndarray): The denoised image sequence.
+        img (np.ndarray): The input image sequence.
+        img_height (int): Height of the input image sequence.
+        img_width (int): Width of the input image sequence.
+        img_mean (np.ndarray): Mean of the input image sequence along the z-axis.
+        img_std (np.ndarray): Standard deviation of the input image sequence along the z-axis.
     """
 
     def __init__(self, weights: str, batch_size: int, cpu: bool) -> None:
         """
-        Initialize the ModelWrapper.
+        Initialize the ModelWrapper instance.
 
-        Initializes the U-Net model, loads pre-trained weights, and sets up device (GPU or CPU).
-
-        Parameters:
-        - weights (str): Path to the pre-trained weights file.
-        - n_pre (int): Number of frames to use before the target frame.
-        - n_post (int): Number of frames to use after the target frame.
+        Args:
+            weights (str): Path to the pre-trained weights.
+            batch_size (int): Number of frames to process in each batch.
+            cpu (bool): Flag to force CPU usage, even if a GPU is available.
         """
         # initalize model
         self.batch_size = batch_size
@@ -50,8 +59,8 @@ class ModelWrapper:
         """
         Load pre-trained weights into the U-Net model.
 
-        Parameters:
-        - weights (str): Path to the pre-trained weights file.
+        Args:
+            weights (str): Path to the pre-trained weights file.
         """
         if self.device == "cpu":
             self.model.load_state_dict(
@@ -61,16 +70,14 @@ class ModelWrapper:
             self.model.load_state_dict(torch.load(weights))
         self.model.eval()
 
-    def load_and_normalize_img(self, img_path: str) -> None:
+    def normalize_img(self) -> None:
         """
-        Load an image from the specified path, perform normalization, and store information about the image.
+        Normalize the input image sequence using z-score normalization.
 
-        Parameters:
-        - img_path (str): Path to the image file.
+        This method computes the mean and standard deviation along the z-axis
+        of the input image sequence and performs z-score normalization using
+        these values.
         """
-        self.img: np.ndarray = open_file(img_path)
-        _, self.img_height, self.img_width = self.img.shape
-        # compute mean and std along z-axis
         self.img_mean: np.ndarray = np.mean(self.img, axis=0)
         self.img_std: np.ndarray = np.std(self.img, axis=0)
         # normalization
@@ -82,11 +89,15 @@ class ModelWrapper:
         """
         Extract frames around the target frame for making predictions.
 
-        Parameters:
-        - target (int): Index of the target frame.
+        This method extracts a batch of frames from the input image sequence,
+        starting from the specified frame index. The extracted frames are
+        reshaped and converted to a PyTorch tensor for input to the U-Net model.
+
+        Args:
+            from_frame (int): Index of the starting frame for the batch.
 
         Returns:
-        - torch.Tensor: Input tensor for the U-Net model.
+            torch.Tensor: Input tensor for the U-Net model, containing a batch of frames.
         """
         to_frame = min(len(self.img), from_frame + self.batch_size)
         # extract frames
@@ -100,18 +111,17 @@ class ModelWrapper:
         )
         return torch.tensor(X, dtype=torch.float)
 
-    def denoise_img(self, img_path: str) -> None:
+    def inference(self) -> list[np.ndarray]:
         """
-        Denoise an image sequence using the U-Net model.
+        Perform inference on the input image sequence using the U-Net model.
 
-        Parameters:
-        - img_path (str): Path to the image sequence file.
+        This method processes the input image sequence in batches using the
+        U-Net model and returns the denoised frames as a list of NumPy arrays.
 
         Returns:
-        - np.ndarray: Denoised image sequence.
+            list[np.ndarray]: List of denoised frames.
         """
         denoised_image_sequence = []
-        self.load_and_normalize_img(img_path)
         for from_frame in range(0, self.img.shape[0], self.batch_size):
             X = self.get_prediction_frames(from_frame).to(self.device)
             y_pred = np.array(self.model(X).detach().to("cpu"))
@@ -119,6 +129,24 @@ class ModelWrapper:
                 denoised_image_sequence.append(
                     denoised_frame.reshape(self.img_height, self.img_width)
                 )
+        return denoised_image_sequence
+
+    def denoise_img(self, img_path: str) -> None:
+        """
+        Denoise an image sequence using the U-Net model.
+
+        This method loads and normalizes the input image sequence, performs
+        inference using the U-Net model, and stores the denoised image sequence
+        in the `denoised_img` attribute.
+
+        Args:
+            img_path (str): Path to the image sequence file.
+        """
+
+        self.img: np.ndarray = open_file(img_path)
+        _, self.img_height, self.img_width = self.img.shape
+        self.normalize_img()
+        denoised_image_sequence = self.inference()
         self.denoised_img = normalization.reverse_z_norm(
             np.array(denoised_image_sequence), self.img_mean, self.img_std
         )
@@ -126,6 +154,20 @@ class ModelWrapper:
         self.denoised_img = float_to_uint(self.denoised_img)
 
     def write_denoised_img(self, outpath: str) -> None:
+        """
+        Write the denoised image sequence to a file.
+
+        This method writes the denoised image sequence stored in the `denoised_img`
+        attribute to the specified output file path.
+
+        Args:
+            outpath (str): Path to the output file where the denoised image sequence
+                           should be written.
+
+        Raises:
+            AssertionError: If the `denoised_img` attribute is empty, indicating that
+                            the image sequence has not been denoised yet.
+        """
         if self.denoised_img.shape[0] == 0:
             raise AssertionError(
                 f"Before writing a denoised image, first denoise image. Use <ModelWrapper>.denoise_img(<path/to/input_image>)."
