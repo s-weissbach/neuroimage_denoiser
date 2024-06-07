@@ -1,4 +1,3 @@
-from neuroimage_denoiser.model.unet import UNet
 from neuroimage_denoiser.model.denoise import inference
 from neuroimage_denoiser.utils.open_file import open_file
 
@@ -52,6 +51,7 @@ def extract_roi_trace(img: np.ndarray, roi_path: str) -> np.ndarray:
     mask = disk((center_y, center_x), radius)
     return np.mean(img[:, mask[0], mask[1]], axis=1)
 
+
 def raw_evaluate(
     img_path: str,
     roi_dir: str,
@@ -62,14 +62,14 @@ def raw_evaluate(
     stimulation_frames = sorted(stimulation_frames)
     possible_response_frames = []
     for stim in stimulation_frames:
-        for pf in range(1,response_patience+1):
-            possible_response_frames.append(stim+pf)
+        for pf in range(1, response_patience + 1):
+            possible_response_frames.append(stim + pf)
     noise_stds = []
     result = {}
     for roi in os.listdir(roi_dir):
         if not roi.endswith(".roi"):
             continue
-        roi_name = str(roi.split('.roi')[0])
+        roi_name = str(roi.split(".roi")[0])
         result[roi_name] = {}
         mean_trace = extract_roi_trace(img, os.path.join(roi_dir, roi))
         threshold = compute_threshold(mean_trace, 4, 0, stimulation_frames[0])
@@ -78,10 +78,19 @@ def raw_evaluate(
         )
         result[roi_name]["peak_frames"] = [int(frame) for frame in peak_frames]
         result[roi_name]["peak_intensities"] = mean_trace[peak_frames].tolist()
-        #result[roi_name]["peak_intensities"] = mean_trace[result[roi_name]["peak_frames"]].tolist()
-        noise_stds.append(np.std([val for i,val in enumerate(mean_trace) if i not in possible_response_frames]))
-    result['noise_stds'] = float(np.mean(noise_stds))
+        # result[roi_name]["peak_intensities"] = mean_trace[result[roi_name]["peak_frames"]].tolist()
+        noise_stds.append(
+            np.std(
+                [
+                    val
+                    for i, val in enumerate(mean_trace)
+                    if i not in possible_response_frames
+                ]
+            )
+        )
+    result["noise_stds"] = float(np.mean(noise_stds))
     return result
+
 
 def evaluate(
     modelpath: str,
@@ -91,26 +100,26 @@ def evaluate(
     roi_dir: str,
     stimulation_frames: list[int],
     response_patience: int,
-    result_raw: dict
+    result_raw: dict,
 ) -> dict:
     use_cpu = not torch.cuda.is_available()
     stimulation_frames = sorted(stimulation_frames)
     # denoise image
     inference(img_path, modelpath, False, tmppath, batch_size, use_cpu, False)
-    img_name = '.'.join(os.path.basename(img_path).split('.')[:-1])
-    fileending = os.path.basename(img_path).split('.')[-1]
-    img = open_file(os.path.join(tmppath,f'{img_name}_denoised.{fileending}'))
+    img_name = ".".join(os.path.basename(img_path).split(".")[:-1])
+    fileending = os.path.basename(img_path).split(".")[-1]
+    img = open_file(os.path.join(tmppath, f"{img_name}_denoised.{fileending}"))
     # evaluate
     result = {}
     possible_response_frames = []
     for stim in stimulation_frames:
-        for pf in range(1,response_patience+1):
-            possible_response_frames.append(stim+pf)
+        for pf in range(1, response_patience + 1):
+            possible_response_frames.append(stim + pf)
     noise_stds = []
     for roi in os.listdir(roi_dir):
         if not roi.endswith(".roi"):
             continue
-        roi_name = str(roi.split('.roi')[0])
+        roi_name = str(roi.split(".roi")[0])
         result[roi_name] = {}
         mean_trace = extract_roi_trace(img, os.path.join(roi_dir, roi))
         threshold = compute_threshold(mean_trace, 4, 0, stimulation_frames[0])
@@ -118,9 +127,21 @@ def evaluate(
             mean_trace, threshold, stimulation_frames, response_patience
         )
         result[roi_name]["peak_frames"] = [int(frame) for frame in peak_frames]
-        result[roi_name]['peak_intensities'] = mean_trace[result[roi_name]['peak_frames']].tolist()
-        result[roi_name]['peak_intensities_match_raw_events'] = mean_trace[result_raw[roi_name]["peak_frames"]].tolist()
-        noise_stds.append(np.std([val for i,val in enumerate(mean_trace) if i not in possible_response_frames]))
-    result['noise_stds'] = float(np.mean(noise_stds))
-    os.remove(os.path.join(tmppath,f'{img_name}_denoised.{fileending}'))
+        result[roi_name]["peak_intensities"] = mean_trace[
+            result[roi_name]["peak_frames"]
+        ].tolist()
+        result[roi_name]["peak_intensities_match_raw_events"] = mean_trace[
+            result_raw[roi_name]["peak_frames"]
+        ].tolist()
+        noise_stds.append(
+            np.std(
+                [
+                    val
+                    for i, val in enumerate(mean_trace)
+                    if i not in possible_response_frames
+                ]
+            )
+        )
+    result["noise_stds"] = float(np.mean(noise_stds))
+    os.remove(os.path.join(tmppath, f"{img_name}_denoised.{fileending}"))
     return result
