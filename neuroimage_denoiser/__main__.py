@@ -11,10 +11,11 @@ from neuroimage_denoiser.model.unet import UNet
 from neuroimage_denoiser.model.train import train
 from neuroimage_denoiser.model.denoise import inference
 from neuroimage_denoiser.model.gridsearch_train import gridsearch_train
+from neuroimage_denoiser.utils.inferencespeed import eval_inferencespeed
 
 
 def main():
-    parser = argparse.ArgumentParser(description="iGlu Denoiser")
+    parser = argparse.ArgumentParser(description="Neuroimage Denoiser")
     subparsers = parser.add_subparsers(dest="mode")
 
     pre_training_p = subparsers.add_parser("prepare_training")
@@ -130,6 +131,31 @@ def main():
     denoise_p.add_argument(
         "--cpu", action="store_true", help="Force CPU and not use GPU."
     )
+    # evaluate inference speed for several image sizes
+    eval_speed_p = subparsers.add_parser("eval_inference_speed")
+    eval_speed_p.add_argument(
+        "--path", "-p", required=True, help="Path to folder containing images"
+    )
+    eval_speed_p.add_argument(
+        "--modelpath", "-m", type=str, required=True, help="Path to modelweights."
+    )
+    eval_speed_p.add_argument(
+        "--cropsizes",
+        "-c",
+        type=str,
+        required=True,
+        nargs="+",
+        help="List of crop sizes to test",
+    )
+    eval_speed_p.add_argument(
+        "--num_frames", "-n", type=int, required=True, help="number of frames to test"
+    )
+    eval_speed_p.add_argument(
+        "--outpath", "-o", required=True, type=str, help="Path to save result."
+    )
+    eval_speed_p.add_argument(
+        "--cpu", action="store_true", help="Force CPU and not use GPU."
+    )
 
     args = parser.parse_args()
     if args.mode == "prepare_training":
@@ -207,6 +233,15 @@ def main():
             args.outputpath,
             args.batchsize,
             args.cpu,
+        )
+    elif args.mode == "eval_inference_speed":
+        eval_inferencespeed(
+            modelpath=args.modelpath,
+            folderpath=args.path,
+            cropsizes=[int(cs) for cs in args.cropsizes],
+            num_frames=args.num_frames,
+            cpu=args.cpu,
+            outpath=args.outpath,
         )
     else:
         parser.print_help()
