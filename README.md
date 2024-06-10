@@ -1,12 +1,13 @@
 # Neuroimage Denoiser Documentation
-[![python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org)[![pytorch](https://img.shields.io/badge/PyTorch_2.1.0+-ee4c2c?logo=pytorch&logoColor=white.svg)](https://pytorch.org)[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+![PyPI](https://img.shields.io/pypi/v/PACKAGE?label=pypi%20package)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/neuroimage_denoiser)[![python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org)[![pytorch](https://img.shields.io/badge/PyTorch_2.1.0+-ee4c2c?logo=pytorch&logoColor=white.svg)](https://pytorch.org)[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 ## Table of Contents
 
 - [Overview](#overview)
 - [Getting Started](#getting-started)
 - [Usage](#usage)
 - [Training a Custom Model](#training-a-custom-model)
-  - [Prepare Training Data](#1-prepare-training-data)
+  - [Prepare Training Data](#1-prepare-training)
   - [Prepare Config File](#2-prepare-config-file)
   - [Train the Model](#3-train-the-model)
   - [Gridsearch](#gridsearch)
