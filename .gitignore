@@ -1,3 +1,5 @@
+# mac folder attributes
+.DS_Store
 # no pytorch weights (size limitations of github)
 *.pt
 # csv files
