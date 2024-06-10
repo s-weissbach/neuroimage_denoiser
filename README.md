@@ -9,6 +9,7 @@
 
 - [Overview](#overview)
 - [Getting Started](#getting-started)
+- [Building from Source](#building-from-source)
 - [Usage](#usage)
 - [Training a Custom Model](#training-a-custom-model)
   - [Prepare Training Data](#1-prepare-training)
@@ -33,8 +34,26 @@ The Deep iGlu Denoiser maintains the amplitude heights and therefore does not al
 
 ## Getting started
 
-Follow these steps to set up Deep iGlu Denoiser:
+Follow these steps to set up Neuroimage Denoiser:
 
+1. **Create a new enviorment:**
+   
+   ```bash
+   conda create -n neuroimage_denoiser python=3.10 pip
+   conda activate neuroimage_denoiser
+   ```
+
+2. **Install from pip:**
+   
+   ```bash
+   pip install neuroimage_denoiser
+   ```
+
+3. **Download pre-trained model:**
+   Download the pre-trained model from [the release page](https://github.com/s-weissbach/neuroimage_denoiser/releases/) and place it in the project directory.
+
+### Building from Source
+To build the latest version directly from GitHub, follow these steps:
 1. **Create a new enviorment:**
    
    ```bash
@@ -54,7 +73,6 @@ Follow these steps to set up Deep iGlu Denoiser:
    ```bash
    pip install -e .
    ```
-
 4. **Download pre-trained model:**
    Download the pre-trained model from [the release page](https://github.com/s-weissbach/neuroimage_denoiser/releases/) and place it in the project directory.
 
