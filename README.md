@@ -19,6 +19,7 @@
 - [Utils](#utils)
   - [Filter h5 file](#filter-h5-file)  
   - [Evaluate Inference Speed](#evaluate-inference-speed)
+- [How to Cite](#how-to-cite)
 
 ## Overview
 
