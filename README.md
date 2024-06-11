@@ -28,7 +28,7 @@ The Neuroimage Denoiser is a powerful tool designed for denoising microscopic re
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | <img src="graphics/raw.gif" title="raw" alt="raw synapse" width="210"> | <img src="graphics/denoised.gif" title="denoised" alt="denoised synapse" width="210"> |
 
-The Deep iGlu Denoiser maintains the amplitude heights and therefore does not alter subsequent analysis. 
+The Neuroimage Denoiser maintains the amplitude heights and therefore does not alter subsequent analysis. 
 
 <img src="graphics/correlation_analysis.png" title="correlation" alt="correlation raw amplitudes to denoised amplitutes" width="420">
 
@@ -297,3 +297,8 @@ python -m neuroimage_denoiser eval_inference_speed --path <path> --modelpath <mo
 | `--num_frames` | `-n`      | Number of frames to test                               | Yes      | `100`                    |
 | `--outpath`    | `-o`      | Path to save result                                    | Yes      | `/path/to/save/results`  |
 | `--cpu`        |           | Force CPU usage, even if a GPU is available (optional) | No       |                          |
+
+# How to Cite
+**Neuroimage Denoiser for removing noise from transient fluorescent signals in functional imaging.**
+Stephan Weissbach, Jonas Milkovits, Michela Borghi, Carolina Amaral, Abderazzaq El Khallouqi, Susanne Gerber, Martin Heine
+*bioRxiv* 2024.06.08.598061; doi: https://doi.org/10.1101/2024.06.08.598061
