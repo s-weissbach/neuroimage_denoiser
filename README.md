@@ -2,8 +2,8 @@
 
 ![raw synapse](graphics/logo.png "raw")
 
-![PyPI](https://img.shields.io/pypi/v/PACKAGE?label=pypi%20package)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/neuroimage_denoiser)[![python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org)[![pytorch](https://img.shields.io/badge/PyTorch_2.1.0+-ee4c2c?logo=pytorch&logoColor=white.svg)](https://pytorch.org)[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![PyPI version](https://badge.fury.io/py/neuroimage_denoiser.svg)](https://badge.fury.io/py/neuroimage_denoiser)
+[![python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org)[![pytorch](https://img.shields.io/badge/PyTorch_2.1.0+-ee4c2c?logo=pytorch&logoColor=white.svg)](https://pytorch.org)[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Table of Contents
 
