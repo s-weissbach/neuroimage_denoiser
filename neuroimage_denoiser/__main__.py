@@ -87,7 +87,7 @@ def main():
     )
     train_p.add_argument(
         "--gpu_num",
-        type="str",
+        type=str,
         help="Specify the GPU to use, default is 0",
         default="0",
     )
@@ -140,7 +140,7 @@ def main():
     )
     denoise_p.add_argument(
         "--gpu_num",
-        type="str",
+        type=str,
         help="Specify the GPU to use, default is 0",
         default="0",
     )
