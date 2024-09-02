@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "neuroimage_denoiser"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Stephan Weißbach <s.weissbach@uni-mainz.de>"]
 readme = "README.md"

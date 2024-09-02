@@ -11,6 +11,7 @@ def inference(
     outputpath: str,
     batch_size: int,
     cpu: bool,
+    gpu_num: str,
     pbar: bool = True,
 ) -> None:
     """
@@ -29,7 +30,7 @@ def inference(
     os.makedirs(outputpath, exist_ok=True)
     path = os.path.abspath(path)
     # initalize model
-    model = ModelWrapper(modelpath, batch_size, cpu)
+    model = ModelWrapper(modelpath, batch_size, cpu, gpu_num)
     if directory_mode:
         # preserver original folderstructure
         copy_folder_structure(path, outputpath)

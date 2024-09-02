@@ -107,6 +107,7 @@ python -m neuroimage_denoiser denoise --path /path/to/images --modelpath /path/t
 | `--outputpath`     | `-o`      | Path to output directory                          |
 | `--batchsize`      | `-b`      | Number of frames predicted at once (default: 1)   |
 | `--cpu`            |           | Force CPU useage, even if a GPU was found         |
+| `--gpu_num`        |           | Specify the GPU to use (default: 0)               |
 
 ### Supported File Formats
 
@@ -208,6 +209,7 @@ python -m neuroimage_denoiser train -p /path/to/trainconfig.yaml`
 ```
 
 `--trainconfigpath (-p)`: Path to the train config YAML file containing training parameters.
+`----gpu_num`: Specify the GPU to use (default: 0)
 
 When a CUDA capable GPU is found `GPU ready` will be printed; otherwise `Warning: only CPU found`. It is not recommended to train with a CPU only.
 

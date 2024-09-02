@@ -28,7 +28,7 @@ class ModelWrapper:
         img_std (np.ndarray): Standard deviation of the input image sequence along the z-axis.
     """
 
-    def __init__(self, weights: str, batch_size: int, cpu: bool) -> None:
+    def __init__(self, weights: str, batch_size: int, cpu: bool, gpu_num: str) -> None:
         """
         Initialize the ModelWrapper instance.
 
@@ -40,7 +40,9 @@ class ModelWrapper:
         # initalize model
         self.batch_size = batch_size
         # check for GPU, use CPU otherwise
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            f"cuda:{gpu_num}" if torch.cuda.is_available() else "cpu"
+        )
         # if flag cpu is set, use cpu regardless of available GPU
         if cpu:
             self.device = "cpu"
