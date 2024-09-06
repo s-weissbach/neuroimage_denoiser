@@ -16,8 +16,9 @@ def train(
     learningrate: float = 0.0001,
     lossfunction: str = "L1",
     modelpath: str = "unet.pt",
+    gpu_num: str = "0",
     history_savepath: str = "train_loss.npy",
-    pbar: bool = True
+    pbar: bool = True,
 ) -> None:
     """
     Train the U-Net model using the specified data loader.
@@ -43,7 +44,7 @@ def train(
         raise NotImplementedError(
             f"The selected loss function ('{lossfunction}) is not available. Select from {list(lossfunctions.keys())}."
         )
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(f"cuda:{gpu_num}" if torch.cuda.is_available() else "cpu")
     if device == "cpu":
         print("WARNING! Training on the CPU can be very (!) time consuming.")
     else:

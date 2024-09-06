@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Weißbach"
+  given-names: "Stephan"
+- family-names: "Milkovits"
+  given-names: "Jonas"
+- family-names: "Borghi"
+  given-names: "Michela"
+- family-names: "Amaral"
+  given-names: "Carolina"
+- family-names: "El Khallouqi"
+  given-names: "Abderazzaq"
+- family-names: "Gerber"
+  given-names: "Susanne"
+- family-names: "Heine"
+  given-names: "Martin"
+title: "Neuroimage Denoiser for removing noise from transient fluorescent signals in functional imaging."
+doi: 10.1101/2024.06.08.598061
+url: "https://www.biorxiv.org/content/10.1101/2024.06.08.598061v1"

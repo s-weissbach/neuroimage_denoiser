@@ -12,6 +12,7 @@ from neuroimage_denoiser.model.train import train
 from neuroimage_denoiser.model.denoise import inference
 from neuroimage_denoiser.model.gridsearch_train import gridsearch_train
 from neuroimage_denoiser.utils.inferencespeed import eval_inferencespeed
+import os
 
 
 def main():
@@ -84,6 +85,12 @@ def main():
     train_p.add_argument(
         "--trainconfigpath", "-p", required=True, help="Path to train config YAML file"
     )
+    train_p.add_argument(
+        "--gpu_num",
+        type=str,
+        help="Specify the GPU to use, default is 0",
+        default="0",
+    )
     # gridsearch training
     gridtrain_p = subparsers.add_parser("gridsearch_train")
     gridtrain_p.add_argument(
@@ -130,6 +137,12 @@ def main():
     )
     denoise_p.add_argument(
         "--cpu", action="store_true", help="Force CPU and not use GPU."
+    )
+    denoise_p.add_argument(
+        "--gpu_num",
+        type=str,
+        help="Specify the GPU to use, default is 0",
+        default="0",
     )
     # evaluate inference speed for several image sizes
     eval_speed_p = subparsers.add_parser("eval_inference_speed")
@@ -199,7 +212,15 @@ def main():
             sigma_gausian_filter,
         )
         model = UNet(1)
-        train(model, dataloader, num_epochs, learning_rate, lossfunction, modelpath)
+        train(
+            model,
+            dataloader,
+            num_epochs,
+            learning_rate,
+            lossfunction,
+            modelpath,
+            args.gpu_num,
+        )
     # gridsearch train
     elif args.mode == "gridsearch_train":
         gridsearch_train(args.trainconfigpath)
@@ -226,6 +247,7 @@ def main():
         print(f"Kept {idx} of {num_samples} examples.")
     # denoising / inference
     elif args.mode == "denoise":
+        os.environ
         inference(
             args.path,
             args.modelpath,
@@ -233,6 +255,7 @@ def main():
             args.outputpath,
             args.batchsize,
             args.cpu,
+            args.gpu_num,
         )
     elif args.mode == "eval_inference_speed":
         eval_inferencespeed(
