@@ -1,9 +1,28 @@
 import numpy as np
+import torch
 import os
 from scipy.ndimage import uniform_filter1d
 
 
 def z_norm(
+    img: torch.tensor,
+    mean: torch.tensor,
+    std: torch.tensor,
+) -> torch.tensor:
+    """
+    Pixelwise z-scaling for the image. z = (x-µ)/σ
+
+    Parameters:
+    - img (torch.tensor[torch.float32]): Input image.
+    - mean (torch.tensor[torch.float32]): Mean matrix for scaling
+    - std (torch.tensor[torch.float32]): Standard deviation matrix for scaling.
+
+    Returns:
+        torch.tensor[torch.float32]: z-scaled image.
+    """
+    return torch.div(torch.subtract(img, mean), std).type(torch.float32)
+
+def z_norm_numpy(
     img: np.ndarray,
     mean: np.ndarray,
     std: np.ndarray,
@@ -108,11 +127,11 @@ def reverse_z_norm(
     Reverse z-scaling for the image. x = z*σ+µ
 
     Parameters:
-    - img (np.ndarray[np.float64]): Input image.
-    - mean (np.ndarray[np.float64]): Mean matrix for scaling.
-    - std (np.ndarray[np.float64]): Standard deviation matrix for scaling.
+    - img (np.ndarray[np.float32]): Input image.
+    - mean (np.ndarray[np.float32]): Mean matrix for scaling.
+    - std (np.ndarray[np.float32]): Standard deviation matrix for scaling.
 
     Returns:
-        np.ndarray[np.float64]; reversed z-scored image.
+        np.ndarray[np.float32]; reversed z-scored image.
     """
-    return np.add(np.multiply(img, std), mean)
+    return torch.add(torch.multiply(img, std), mean).type(torch.float32)

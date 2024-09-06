@@ -134,7 +134,7 @@ class TrainFiles:
             return
         mean = np.mean(file, axis=0)
         std = np.std(file, axis=0)
-        file = normalization.z_norm(file, mean, std)
+        file = normalization.z_norm_numpy(file, mean, std)
         hf = h5py.File(self.output_h5_file, "a")
         # create dict to be stored as h5 file
         for event in frames_and_positions:

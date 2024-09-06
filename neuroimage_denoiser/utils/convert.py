@@ -1,5 +1,5 @@
 import numpy as np
-
+import torch
 
 def uint_to_float(img: np.ndarray) -> np.ndarray:
     """
@@ -14,7 +14,7 @@ def uint_to_float(img: np.ndarray) -> np.ndarray:
     return img.astype(np.float64)
 
 
-def float_to_uint(img: np.ndarray) -> np.ndarray:
+def float_to_uint(img: np.array) -> np.array:
     """
     Convert an input array of floats to unsigned integers (uint16),
     handling underflows and overflows.
