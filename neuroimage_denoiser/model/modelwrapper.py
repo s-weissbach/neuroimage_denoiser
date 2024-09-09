@@ -67,7 +67,7 @@ class ModelWrapper:
         )
         self.model.eval()
 
-    def normalize_img(self) -> None:
+    def normalize_img(self, img: np.ndarray) -> None:
         """
         Normalize the input image sequence using z-score normalization.
 
@@ -75,12 +75,13 @@ class ModelWrapper:
         of the input image sequence and performs z-score normalization using
         these values.
         """
-        self.img_std, self.img_mean = torch.std_mean(self.img_tensor, axis=0)
+        self.img_std = np.std(img,axis=0)
+        self.img_mean = np.mean(img,axis=0)
         # normalization
-        self.img_tensor: torch.tensor = normalization.z_norm(
-            self.img_tensor, self.img_mean, self.img_std
+        img: torch.tensor = normalization.z_norm(
+            img, self.img_mean, self.img_std
         )
-        self.img_tensor = self.img_tensor.type(dtype=torch.float32) 
+        return img
 
     def get_prediction_frames(self, from_frame: int) -> torch.Tensor:
         """
@@ -128,9 +129,8 @@ class ModelWrapper:
             current_batch_size = to_frame - from_frame
             X = self.get_prediction_frames(from_frame).to(self.device)
             with torch.no_grad():
-                y_pred = self.model(X)
+                y_pred = self.model(X.type(torch.float))
             denoised_image_sequence[from_frame:to_frame] = y_pred.cpu().reshape(current_batch_size, self.img_height, self.img_width)
-
         return denoised_image_sequence
 
     def denoise_img(self, img_path: str) -> None:
@@ -146,14 +146,14 @@ class ModelWrapper:
         """
         img: np.ndarray = open_file(img_path)
         _, self.img_height, self.img_width = img.shape
-        self.img_tensor: torch.tensor = torch.from_numpy(img)
-        self.normalize_img()
-        denoised_image_sequence = self.inference()
+        img: np.ndarray = self.normalize_img(img)
+        self.img_tensor: torch.tensor = torch.tensor(img, dtype=torch.float)
+        denoised_image_sequence = np.array(self.inference())
         self.denoised_img = normalization.reverse_z_norm(
             denoised_image_sequence, self.img_mean, self.img_std
         )
         # tiff format is based on uint16 -> cast
-        self.denoised_img = float_to_uint(denoised_image_sequence.numpy())
+        self.denoised_img = float_to_uint(denoised_image_sequence)
 
     def write_denoised_img(self, outpath: str) -> None:
         """

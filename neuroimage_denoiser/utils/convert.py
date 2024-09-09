@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 def uint_to_float(img: np.ndarray) -> np.ndarray:
     """
