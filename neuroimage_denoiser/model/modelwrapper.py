@@ -90,17 +90,13 @@ class ModelWrapper:
         for frame_idx in range(from_frame, to_frame, self.num_frames):
             if frame_idx >= self.img_tensor.shape[0]:
                 break
-            elif frame_idx + frame_idx + self.num_frames:
+            elif self.img_tensor.shape[0] < frame_idx + self.num_frames:
                 # if not enough frames, use mirror padding
                 temporal_window = self.img_tensor[frame_idx:]
                 padded_frames = self.num_frames - temporal_window.shape[0]
                 temporal_window = torch.nn.functional.pad(
-                    0,
-                    padded_frames,
-                    0,
-                    0,
-                    0,
-                    0,
+                    temporal_window,
+                    (0, padded_frames, 0, 0, 0, 0),
                     mode="reflect",
                 )
             else:
