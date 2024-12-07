@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 import numpy as np
 import h5py
 from alive_progress import alive_bar
@@ -132,7 +131,7 @@ class TrainFiles:
             return
         mean = np.mean(file, axis=0)
         std = np.std(file, axis=0)
-        file = normalization.z_norm_numpy(file, mean, std)
+        file = normalization.z_norm(file, mean, std)
         hf = h5py.File(self.output_h5_file, "a")
         n_pre_frames = self.n_frames // 2
         n_post_frames = self.n_frames - n_pre_frames
