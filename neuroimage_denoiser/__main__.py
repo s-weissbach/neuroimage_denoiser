@@ -144,6 +144,13 @@ def main():
         help="Specify the GPU to use, default is 0",
         default="0",
     )
+    denoise_p.add_argument(
+        "--num_frames",
+        "-n",
+        type=int,
+        required=True,
+        help="Frames stored around a detected peak. Pick same value as in training.",
+    )
     # evaluate inference speed for several image sizes
     eval_speed_p = subparsers.add_parser("eval_inference_speed")
     eval_speed_p.add_argument(
@@ -258,6 +265,7 @@ def main():
             args.batchsize,
             args.cpu,
             args.gpu_num,
+            args.num_frames,
         )
     elif args.mode == "eval_inference_speed":
         eval_inferencespeed(

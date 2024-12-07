@@ -99,15 +99,16 @@ python -m neuroimage_denoiser denoise --path /path/to/images --modelpath /path/t
 
 ### Arguments:
 
-| Argument           | Shorthand | Description                                       |
-| ------------------ | --------- | ------------------------------------------------- |
-| `--path`           | `-p`      | Path to input imagestack or directory             |
-| `--modelpath`      | `-m`      | Path to pre-trained model weights                 |
-| `--directory_mode` | `-d`      | Enable directory mode (preserve folder structure) |
-| `--outputpath`     | `-o`      | Path to output directory                          |
-| `--batchsize`      | `-b`      | Number of frames predicted at once (default: 1)   |
-| `--cpu`            |           | Force CPU useage, even if a GPU was found         |
-| `--gpu_num`        |           | Specify the GPU to use (default: 0)               |
+| Argument           | Shorthand | Description                                                   |
+| ------------------ | --------- | ------------------------------------------------------------- |
+| `--path`           | `-p`      | Path to input imagestack or directory                         |
+| `--modelpath`      | `-m`      | Path to pre-trained model weights                             |
+| `--directory_mode` | `-d`      | Enable directory mode (preserve folder structure)             |
+| `--outputpath`     | `-o`      | Path to output directory                                      |
+| `--batchsize`      | `-b`      | Number of frames predicted at once (default: 1)               |
+| `--cpu`            |           | Force CPU useage, even if a GPU was found                     |
+| `--gpu_num`        |           | Specify the GPU to use (default: 0)                           |
+| `--num_frames`     | `-n`      | Number of frames to be used for training 3D U-net (default: 5)|
 
 ### Supported File Formats
 

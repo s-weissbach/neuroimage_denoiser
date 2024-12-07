@@ -13,6 +13,7 @@ def inference(
     cpu: bool,
     gpu_num: str,
     pbar: bool = True,
+    num_frames: int = 5,
 ) -> None:
     """
     Main function for denoising images using a trained model.
@@ -30,7 +31,7 @@ def inference(
     os.makedirs(outputpath, exist_ok=True)
     path = os.path.abspath(path)
     # initalize model
-    model = ModelWrapper(modelpath, batch_size, cpu, gpu_num)
+    model = ModelWrapper(modelpath, batch_size, cpu, gpu_num, num_frames)
     if directory_mode:
         # preserver original folderstructure
         copy_folder_structure(path, outputpath)
