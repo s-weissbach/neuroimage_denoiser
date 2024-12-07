@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 from alive_progress import alive_bar
+from datetime import datetime
 
 
 def train(
@@ -99,6 +100,6 @@ def train(
                 i += 1
         dataloader.shuffle_array()
     history = np.array(history)
-    plot_train_loss(history, f"example/train_loss.pdf")
+    plot_train_loss(history, f"{datetime.today}_{datetime.now}train_loss.pdf")
     np.save(history_savepath, history)
     torch.save(model.state_dict(), modelpath)
