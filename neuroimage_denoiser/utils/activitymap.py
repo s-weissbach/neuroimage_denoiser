@@ -53,7 +53,6 @@ def get_frames_position(
     min_z_score: float,
     cropsize: int = 32,
     roi_size: int = 4,
-    foreground_background_split: float = 0.5,
 ) -> list[list[int]]:
     """
     Identify positions of frames based on the computed activity map and a minimum Z-score threshold.
@@ -63,7 +62,6 @@ def get_frames_position(
     - min_z_score (float): Minimum Z-score threshold for identifying frames.
     - cropsize (int): Size of the kernel used for patch extraction.
     - roi_size (int): Size of the sliding window (Region of Interest).
-    - foreground_background_split (float): Split ratio between foreground and background.
 
     Returns:
     - list[list[int]]: List of frame positions, each represented as [frame_index, y_position, x_position].
@@ -74,13 +72,4 @@ def get_frames_position(
     for example in above_z:
         frame, y, x = example
         frames_w_pos.append([int(frame), int(y * cropsize), int(x * cropsize)])
-    bg_images_to_select = (1 / foreground_background_split - 1) * len(frames_w_pos)
-    below_z = np.argwhere(activitymap <= min_z_score)
-    np.random.shuffle(below_z)
-    for i, example in enumerate(below_z):
-        if i > bg_images_to_select:
-            break
-        frame, y, x = example
-        frames_w_pos.append([int(frame), int(y * cropsize), int(x * cropsize)])
     return frames_w_pos
-
