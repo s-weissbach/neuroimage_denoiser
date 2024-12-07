@@ -203,7 +203,7 @@ def main():
         noise_scale = trainconfig["noise_scale"]
         gausian_filter = trainconfig["gausian_filter"]
         sigma_gausian_filter = trainconfig["sigma_gausian_filter"]
-        num_frames = trainconfig("num_frames")
+        num_frames = trainconfig["num_frames"]
         dataloader = DataLoader(
             h5,
             batch_size,
