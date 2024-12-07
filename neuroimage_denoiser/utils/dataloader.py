@@ -87,16 +87,18 @@ class DataLoader:
                 self.epoch_done = True
                 return False
             h5_idx = self.available_train_examples.pop(0)
-            y_tmp = np.array(self.h5_file.get(h5_idx))
-            self.X_list.append(
-                self.add_gausian_noise(y_tmp.copy()).reshape(
-                    1, y_tmp.shape[0], y_tmp.shape[1]
-                )
-            )
+            sequence = np.array(self.h5_file.get(h5_idx))
+            # Calculate random starting point
+            max_start = sequence.shape[0] - self.frames_per_sample
+            if max_start > 0:
+                start_idx = np.random.randint(0, max_start)
+                sequence = sequence[start_idx : start_idx + self.frames_per_sample]
+            X_tmp = self.add_gausian_noise(sequence.copy())
+            self.X_list.append(X_tmp)
+            # Process target
             if self.apply_gausian_filter:
-                y_tmp = gaussian_filter(y_tmp, self.sigma_gausian_filter)
-            y_tmp = y_tmp.reshape(1, y_tmp.shape[0], y_tmp.shape[1])
-            self.y_list.append(y_tmp)
+                sequence = gaussian_filter(sequence, self.sigma_gausian_filter)
+            self.y_list.append(sequence)
 
         self.X = torch.tensor(np.array(self.X_list), dtype=torch.float)
         self.X_list = []
