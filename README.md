@@ -162,14 +162,14 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 | `--h5`               |           | Path to the output H5 file that will be created                                                    |
 | `--min_z_score`      | `-z`      | Minimum Z score to be considered an active ROI (default: 2)                                        |
 | `--window_size`      | `-w`      | Number of frames used for rolling window z-normalization (default: 50)                             |
-| `--fgsplit`          | `-s`      | Foreground to background split (default: 0.5)                                                      |
+| `--num_frames`       | `-n`      | Number of frames to be used for training 3D U-net (default: 20)                                    |
 | `--overwrite`        |           | Overwrite existing H5 file. If false, data will be appended (default: False)                       |
 | `--memory_optimized` |           | Execute preparation process with optimized memory usage. Increases execution time (default: False) |
 
 Example usage:
 
 ```bash
-python -m neuroimage_denoiser prepare_training --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --fgsplit 0.8 --overwrite False
+python -m neuroimage_denoiser prepare_training --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --num_frames 20 --overwrite False
 ```
 
 ## 2. Prepare config file
@@ -184,6 +184,7 @@ learning_rate: 0.0001
 num_epochs: 1
 noise_center: 0.0
 noise_scale: 2.0
+num_frames: 5
 ```
 
 Adjust the paths and parameters in the configuration file based on your specific setup and requirements. This configuration file will be used during the training process to specify various parameters further:
