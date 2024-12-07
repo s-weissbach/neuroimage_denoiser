@@ -13,6 +13,7 @@ class DataLoader:
         noise_scale: float = 1.5,
         apply_gausian_filter: bool = False,
         sigma_gausian_filter: float = 1.0,
+        num_frames: int = 5,
     ):
         """
         Initialize the dataset with HDF5 file, batch size, and optional noise parameters.
@@ -31,6 +32,7 @@ class DataLoader:
         self.noise_scale = noise_scale
         self.apply_gausian_filter = apply_gausian_filter
         self.sigma_gausian_filter = sigma_gausian_filter
+        self.num_frames = num_frames
         self.epoch_done = False
         print(
             f"Found {len(self.train_samples)} samples to train. \n Batch size is {self.batch_size} -> {len(self.train_samples)//self.batch_size} iterations per epoch."
@@ -89,10 +91,10 @@ class DataLoader:
             h5_idx = self.available_train_examples.pop(0)
             sequence = np.array(self.h5_file.get(h5_idx))
             # Calculate random starting point
-            max_start = sequence.shape[0] - self.frames_per_sample
+            max_start = sequence.shape[0] - self.num_frames
             if max_start > 0:
                 start_idx = np.random.randint(0, max_start)
-                sequence = sequence[start_idx : start_idx + self.frames_per_sample]
+                sequence = sequence[start_idx : start_idx + self.num_frames]
             X_tmp = self.add_gausian_noise(sequence.copy())
             self.X_list.append(X_tmp)
             # Process target
@@ -100,8 +102,8 @@ class DataLoader:
                 sequence = gaussian_filter(sequence, self.sigma_gausian_filter)
             self.y_list.append(sequence)
 
-        self.X = torch.tensor(np.array(self.X_list), dtype=torch.float)
+        self.X = torch.tensor(np.array(self.X_list), dtype=torch.float).unsqueeze(1)
         self.X_list = []
-        self.y = torch.tensor(np.array(self.y_list), dtype=torch.float)
+        self.y = torch.tensor(np.array(self.y_list), dtype=torch.float).unsqueeze(1)
         self.y_list = []
         return True
