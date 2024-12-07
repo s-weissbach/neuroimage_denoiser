@@ -64,13 +64,6 @@ def main():
         help="Number of frames used for rolling window z-normalization (default: 50)",
     )
     pre_training_p.add_argument(
-        "--fgsplit",
-        "-s",
-        type=float,
-        default=0.5,
-        help="Foreground to background split (default: 0.5)",
-    )
-    pre_training_p.add_argument(
         "--overwrite",
         action="store_true",
         help="Overwrite existing h5 file. If false, data will be appended. (default: False)",
@@ -179,7 +172,6 @@ def main():
             roi_size=args.roi_size,
             output_h5_file=args.h5,
             window_size=args.window_size,
-            foreground_background_split=args.fgsplit,
             overwrite=args.overwrite,
         )
         # gather train data

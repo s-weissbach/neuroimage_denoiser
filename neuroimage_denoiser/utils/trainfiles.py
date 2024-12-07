@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 import numpy as np
 import h5py
 from alive_progress import alive_bar
@@ -94,9 +93,7 @@ class TrainFiles:
         with alive_bar(len(files_to_do)) as bar:
             for filepath in files_to_do:
                 if memory_optimized:
-                    self.handle_file_memory_optimized(
-                        filepath, directory
-                    )
+                    self.handle_file_memory_optimized(filepath, directory)
                 else:
                     self.handle_file(filepath)
                 bar()
@@ -108,7 +105,6 @@ class TrainFiles:
             os.remove(os.path.join(directory, "mmap_mean.npy"))
         hf.close()
 
-
     def handle_file(
         self,
         filepath: str,
@@ -118,7 +114,9 @@ class TrainFiles:
             print(f"WARNING: skipped ({filepath}), not a series.")
             return
         # remove inital and last frames to avoid artifacts from start/end recording + rolling window normalization artifacts
-        file_znorm = normalization.rolling_window_z_norm(file, self.window_size)[self.window_size//2:(file.shape[0]-self.window_size//2)]
+        file_znorm = normalization.rolling_window_z_norm(file, self.window_size)[
+            self.window_size // 2 : (file.shape[0] - self.window_size // 2)
+        ]
         # will go through all frames and extract events that within a meaned kernel exceed the
         # min_z_score threshold
         # returns a list of events in the form [frame, y-coord, x-coord]
@@ -134,13 +132,13 @@ class TrainFiles:
             return
         mean = np.mean(file, axis=0)
         std = np.std(file, axis=0)
-        file = normalization.z_norm_numpy(file, mean, std)
+        file = normalization.z_norm(file, mean, std)
         hf = h5py.File(self.output_h5_file, "a")
         # create dict to be stored as h5 file
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
             # correct for frames that were removed from the begining
-            target_frame += self.window_size//2
+            target_frame += self.window_size // 2
             example = file[
                 target_frame,
                 y_pos : y_pos + self.crop_size,
@@ -150,9 +148,7 @@ class TrainFiles:
             self.idx += 1
         hf.close()
 
-    def handle_file_memory_optimized(
-        self, filepath: str, directory: str
-    ) -> None:
+    def handle_file_memory_optimized(self, filepath: str, directory: str) -> None:
         file = open_file(filepath)
         if len(file.shape) <= 2:
             print(f"WARNING: skipped ({filepath}), not a series.")
@@ -179,7 +175,7 @@ class TrainFiles:
         # remove inital and last frames to avoid artifacts from start/end recording + rolling window normalization artifacts
         znorm_file = normalization.rolling_window_z_norm_memory_optimized(
             mmap_file, self.window_size, directory
-        )[self.window_size//2:(mmap_file.shape[0]-self.window_size//2)]
+        )[self.window_size // 2 : (mmap_file.shape[0] - self.window_size // 2)]
         mmap_znorm_file[:] = znorm_file[:]
         # flush mmap to disk
         del znorm_file
@@ -210,7 +206,7 @@ class TrainFiles:
         for event in frames_and_positions:
             target_frame, y_pos, x_pos = event
             # correct for frames that were removed from the begining
-            target_frame += self.window_size//2
+            target_frame += self.window_size // 2
             example = mmap_file[
                 target_frame,
                 y_pos : y_pos + self.crop_size,

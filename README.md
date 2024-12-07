@@ -88,7 +88,7 @@ Activate the conda enviorment:
 conda activate neuroimage_denoiser
 ```
 
-Run the following command to denoise images using the provided script:
+Run the following command to denoise images:
 
 ```bash
 python -m neuroimage_denoiser denoise --path /path/to/images --modelpath /path/to/model_weights --directory_mode -o /output/path
@@ -162,14 +162,13 @@ Use the `prepare_trainfiles` script to generate training data from a set of imag
 | `--h5`               |           | Path to the output H5 file that will be created                                                    |
 | `--min_z_score`      | `-z`      | Minimum Z score to be considered an active ROI (default: 2)                                        |
 | `--window_size`      | `-w`      | Number of frames used for rolling window z-normalization (default: 50)                             |
-| `--fgsplit`          | `-s`      | Foreground to background split (default: 0.5)                                                      |
 | `--overwrite`        |           | Overwrite existing H5 file. If false, data will be appended (default: False)                       |
 | `--memory_optimized` |           | Execute preparation process with optimized memory usage. Increases execution time (default: False) |
 
 Example usage:
 
 ```bash
-python -m neuroimage_denoiser prepare_training --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --fgsplit 0.8 --overwrite False
+python -m neuroimage_denoiser prepare_training --path /path/to/traindata --fileendings tif tiff nd2 --crop_size 32 --roi_size 6 --trainh5 training_data.h5 --min_z_score 2.0 --window_size 50 --overwrite False
 ```
 
 ## 2. Prepare config file
