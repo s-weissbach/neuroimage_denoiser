@@ -30,7 +30,7 @@ class UNet(nn.Module):
         self.up2 = modelparts.Up(512, 256)
         self.up3 = modelparts.Up(256, 128)
         self.up4 = modelparts.Up(128, 64)
-        self.out_block = nn.Conv2d(64, 1, kernel_size=1)
+        self.out_block = nn.Conv3d(64, 1, kernel_size=1)
 
     def forward(self, input) -> torch.Tensor:
         """
