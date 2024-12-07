@@ -23,7 +23,7 @@ class Down(nn.Module):
     def __init__(self, in_channels, out_channels) -> None:
         super().__init__()
         self.unet_down_block = nn.Sequential(
-            nn.MaxPool3d((0, 2, 2)), UnetConvBlock(in_channels, out_channels)
+            nn.MaxPool3d((1, 2, 2)), UnetConvBlock(in_channels, out_channels)
         )
 
     def forward(self, input) -> torch.Tensor:
