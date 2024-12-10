@@ -5,6 +5,7 @@ from neuroimage_denoiser.utils.open_file import open_file
 from neuroimage_denoiser.utils.convert import float_to_uint
 import torch
 import numpy as np
+import os
 
 
 class ModelWrapper:
@@ -35,10 +36,21 @@ class ModelWrapper:
         Initialize the ModelWrapper instance.
 
         Args:
-            weights (str): Path to the pre-trained weights.
-            batch_size (int): Number of frames to process in each batch.
+            weights (str): Path to the pre-trained weights file. Must be a valid file path.
+            batch_size (int): Number of frame sequences to process in parallel. Must be positive.
             cpu (bool): Flag to force CPU usage, even if a GPU is available.
+            gpu_num (str): GPU device number to use if available (e.g. "0", "1"). Ignored if cpu=True.
+            num_frames (int): Number of frames per temporal window for processing. Must be positive.
+
+        Raises:
+            ValueError: If weights file does not exist, batch_size <= 0, or num_frames <= 0
         """
+        if not os.path.exists(weights):
+            raise ValueError(f"Weights file not found: {weights}")
+        if batch_size <= 0:
+            raise ValueError(f"Batch size must be positive, got {batch_size}")
+        if num_frames <= 0:
+            raise ValueError(f"Number of frames must be positive, got {num_frames}")
         # initalize model
         self.batch_size = batch_size
         # check for GPU, use CPU otherwise
@@ -54,7 +66,7 @@ class ModelWrapper:
         self.num_frames = num_frames
         # initalize image
         self.img_tensor = None
-        self.img_shape = None
+        self.img_num_frames = None
         self.img_mean = None
         self.img_std = None
 
@@ -72,11 +84,14 @@ class ModelWrapper:
 
     def normalize_img(self, img: np.ndarray) -> None:
         """
-        Normalize the input image sequence using z-score normalization.
+        Normalize image using z-score normalization.
 
-        This method computes the mean and standard deviation along the z-axis
-        of the input image sequence and performs z-score normalization using
-        these values.
+        Args:
+            img: Input image of shape [frames, height, width]
+        Returns:
+            Normalized image of same shape
+        Raises:
+            ValueError: If input image is empty or has wrong dimensions
         """
         self.img_std = np.std(img, axis=0)
         self.img_mean = np.mean(img, axis=0)
@@ -85,7 +100,7 @@ class ModelWrapper:
         return img
 
     def get_prediction_frames(self, from_frame: int) -> torch.Tensor:
-        X = []
+        tmp = []
         to_frame = from_frame + self.batch_size * self.num_frames
         for frame_idx in range(from_frame, to_frame, self.num_frames):
             if frame_idx >= self.img_tensor.shape[0]:
@@ -103,38 +118,20 @@ class ModelWrapper:
                 temporal_window = self.img_tensor[
                     frame_idx : frame_idx + self.num_frames
                 ]
-            temporal_window.reshape(
+            temporal_window = temporal_window.reshape(
                 1, self.num_frames, self.img_tensor.shape[1], self.img_tensor.shape[2]
             )
-            X.append(temporal_window)
-
-        return X
-
-    def inference(self) -> torch.Tensor:
-        """
-        Perform inference on the input image sequence using the U-Net model.
-
-        This method processes the input image sequence in batches using the
-        U-Net model and returns the denoised frames as a list of NumPy arrays.
-
-        Returns:
-            list[np.ndarray]: List of denoised frames.
-        """
-        denoised_image_sequence = torch.zeros(
-            (self.img_tensor.shape[0], self.img_height, self.img_width),
-            device="cpu",
-            dtype=torch.float32,
+            tmp.append(temporal_window)
+        X = torch.empty(
+            len(tmp),
+            1,
+            self.num_frames,
+            self.img_tensor.shape[1],
+            self.img_tensor.shape[2],
         )
-        for from_frame in range(0, self.img_tensor.shape[0], self.batch_size):
-            to_frame = min(from_frame + self.batch_size, self.img_tensor.shape[0])
-            current_batch_size = to_frame - from_frame
-            X = self.get_prediction_frames(from_frame).to(self.device)
-            with torch.no_grad():
-                y_pred = self.model(X.type(torch.float))
-            denoised_image_sequence[from_frame:to_frame] = y_pred.cpu().reshape(
-                current_batch_size, self.img_height, self.img_width
-            )
-        return denoised_image_sequence
+        for i, x in enumerate(tmp):
+            X[i] = x
+        return X
 
     def denoise_img(self, img_path: str) -> None:
         """
@@ -148,17 +145,38 @@ class ModelWrapper:
             img_path (str): Path to the image sequence file.
         """
         img: np.ndarray = open_file(img_path)
-        _, self.img_height, self.img_width = img.shape
+        self.img_num_frames, self.img_height, self.img_width = img.shape
         img: np.ndarray = self.normalize_img(img)
         self.img_tensor: torch.tensor = torch.tensor(img, dtype=torch.float)
-        denoised_image_sequence = np.array(self.inference())
-        self.denoised_img = normalization.reverse_z_norm(
-            denoised_image_sequence, self.img_mean, self.img_std
+        # initalize bigger to account for pottential padding frames, these will
+        # be removed at the end of denoise_img()
+        denoised_image_sequence = torch.zeros(
+            (
+                self.img_tensor.shape[0] + self.num_frames,
+                self.img_height,
+                self.img_width,
+            ),
+            device="cpu",
+            dtype=torch.float32,
+        )
+        for from_frame in range(
+            0, self.img_tensor.shape[0], self.batch_size * self.num_frames
+        ):
+            to_frame = min(
+                from_frame + self.batch_size * self.num_frames, self.img_tensor.shape[0]
+            )
+            X = self.get_prediction_frames(from_frame).to(self.device)
+            with torch.no_grad():
+                y_pred = self.model(X.type(torch.float))
+            batch_predictions = y_pred.squeeze(1)
+            denoised_image_sequence[from_frame:to_frame] = batch_predictions.cpu()
+        denoised_image_sequence = normalization.reverse_z_norm(
+            np.array(denoised_image_sequence), self.img_mean, self.img_std
         )
         # tiff format is based on uint16 -> cast
         self.denoised_img = float_to_uint(denoised_image_sequence)
         # remove potentially padded frames
-        self.denoised_img = self.denoised_img[: self.img_shape[0], :, :]
+        self.denoised_img = self.denoised_img[: self.img_num_frames, :, :]
 
     def write_denoised_img(self, outpath: str) -> None:
         """
