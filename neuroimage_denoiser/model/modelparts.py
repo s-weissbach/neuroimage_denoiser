@@ -40,11 +40,7 @@ class Up(nn.Module):
 
     def forward(self, input, input_skip) -> torch.Tensor:
         x1 = self.up(input)
-
         # Handle padding for all three dimensions
-        diff_y = input_skip.size()[3] - x1.size()[3]
-        diff_x = input_skip.size()[4] - x1.size()[4]
-
         diff_y = input_skip.size()[3] - x1.size()[3]
         diff_x = input_skip.size()[4] - x1.size()[4]
 
@@ -52,8 +48,6 @@ class Up(nn.Module):
             x1 = F.pad(
                 x1,
                 (
-                    0,
-                    0,
                     diff_x // 2,
                     diff_x - diff_x // 2,
                     diff_y // 2,
