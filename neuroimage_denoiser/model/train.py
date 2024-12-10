@@ -1,5 +1,5 @@
 from neuroimage_denoiser.model.unet import UNet
-from neuroimage_denoiser.utils.dataloader import DataLoader
+from torch.utils.data import DataLoader
 from neuroimage_denoiser.utils.plot import plot_train_loss
 import torch
 import torch.nn as nn
@@ -55,17 +55,13 @@ def train(
     criterion = lossfunctions[lossfunction]
     history = []
     # Training loop
-
-    for _ in range(num_epochs):
-        i = 0
+    for epoch in range(num_epochs):
+        print(f"Epoch {epoch+1}/{num_epochs}")
         if pbar:
-            with alive_bar(dataloader.__len__()) as bar:
-                while not dataloader.epoch_done:
-                    batch_generated = dataloader.get_batch()
-                    if not batch_generated:
-                        break
-                    data = dataloader.X.to(device)
-                    targets = dataloader.y.to(device)
+            with alive_bar(len(dataloader)) as bar:
+                for i, (data, targets) in enumerate(dataloader):
+                    data = data.to(device)
+                    targets = targets.to(device)
                     model.train()
                     outputs = model(data)
                     loss = criterion(outputs, targets)
@@ -78,28 +74,27 @@ def train(
                             f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
                         )
                     bar()
-                    i += 1
         else:
-            while not dataloader.epoch_done:
-                batch_generated = dataloader.get_batch()
-                if not batch_generated:
-                    break
-                data = dataloader.X.to(device)
-                targets = dataloader.y.to(device)
+            for i, (data, targets) in enumerate(dataloader):
+                data = data.to(device)
+                targets = targets.to(device)
+
                 model.train()
                 outputs = model(data)
                 loss = criterion(outputs, targets)
                 history.append(loss.item())
+
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
                 if i % 10 == 0:
                     print(
                         f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
                     )
-                i += 1
-        dataloader.shuffle_array()
     history = np.array(history)
-    plot_train_loss(history, f"{datetime.today()}_{datetime.now()}train_loss.pdf")
+    plot_train_loss(
+        history, datetime.now().strftime("%Y-%m-%d_%H:%M:%S_train_loss.pdf")
+    )
     np.save(history_savepath, history)
     torch.save(model.state_dict(), modelpath)
