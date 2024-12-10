@@ -1,11 +1,15 @@
-modelpath: 'unet_z3_nc0_ns1.5-huberloss-gaussianfilter.pt'
-train_h5: '/mnt/nvme2/iGlu_train_data/iglu_train_data_cropsize32_roisize6_stim_z3_filtered.h5'
-batch_size: 64
+modelpath: '3d_test.pt'
+train_h5: '3d_tmp.h5'
+batch_size: 5
 learning_rate: 0.0001
-lossfunction: 'L1'
-num_epochs: 2
+lossfunction: 'Smooth-L1'
+num_epochs: 15
 noise_center: 0
-noise_scale: 1.5
+noise_scale: 2.0
 gausian_filter: True
 sigma_gausian_filter: 1.0
 num_frames: 5
+# optional, if not needed set to -1
+min_start_frame: 5
+# optional, if not needed set to -1
+max_start_frame: 15
