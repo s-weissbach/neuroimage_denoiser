@@ -2,11 +2,15 @@
 .DS_Store
 # no pytorch weights (size limitations of github)
 *.pt
+# train data
+*.h5
 # csv files
 *.csv
 # numpy files
 *.npy
 *.npz
+# pdf plots
+*.pdf
 # nohup files
 nohup.out
 # example files from training
