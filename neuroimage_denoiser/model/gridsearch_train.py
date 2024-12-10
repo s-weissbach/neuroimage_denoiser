@@ -1,12 +1,13 @@
 from neuroimage_denoiser.model.train import train
 from neuroimage_denoiser.model.unet import UNet
-from neuroimage_denoiser.utils.dataloader import DataLoader
+from neuroimage_denoiser.utils.dataset import DataSet
 from neuroimage_denoiser.utils.evaluate_model import evaluate, raw_evaluate
 
 import os
 from alive_progress import alive_bar
 import yaml
 import json
+from torch.utils.data import DataLoader
 
 
 def gridsearch_train(trainconfigpath: str) -> None:
@@ -27,7 +28,7 @@ def gridsearch_train(trainconfigpath: str) -> None:
         "evaluation_img_path",
         "evaluation_roi_folder",
         "stimulation_frames",
-        "response_patience"
+        "response_patience",
     ]:
         if key not in trainconfig:
             raise ValueError(
@@ -43,8 +44,6 @@ def gridsearch_train(trainconfigpath: str) -> None:
     tmp_folder = os.path.join(modelfolder, "tmp")
     os.makedirs(tmp_folder, exist_ok=True)
     # prepare paramterspace
-    
-
     parameterspace = []
     # maybe suboptimal solution and smth like itertools should be used
     total_parameters = 0
@@ -61,13 +60,15 @@ def gridsearch_train(trainconfigpath: str) -> None:
     print(
         f"Parameterspace contains {total_parameters} and thus has to train {len(parameterspace)} model(s)."
     )
-    print('Evaluate on raw image')
-    raw_result = raw_evaluate(trainconfig['evaluation_img_path'],
-                              trainconfig['evaluation_roi_folder'],
-                              trainconfig['stimulation_frames'],
-                              trainconfig['response_patience'])
-    with open(os.path.join(modelfolder,f'raw_performance.json'),'w') as outfile:
-        json.dump(raw_result,outfile)
+    print("Evaluate on raw image")
+    raw_result = raw_evaluate(
+        trainconfig["evaluation_img_path"],
+        trainconfig["evaluation_roi_folder"],
+        trainconfig["stimulation_frames"],
+        trainconfig["response_patience"],
+    )
+    with open(os.path.join(modelfolder, f"raw_performance.json"), "w") as outfile:
+        json.dump(raw_result, outfile)
     with alive_bar(len(parameterspace)) as bar:
         for params in parameterspace:
             ns, nc, gf, lf, sgf = params
@@ -77,13 +78,20 @@ def gridsearch_train(trainconfigpath: str) -> None:
                 modelfolder,
                 f"unet_{lf}-loss_noisescale-{ns}_noisecenter-{nc}_gaussian-{gf}_sigma-{sgf}.npy",
             )
-            dataloader = DataLoader(
+            dataset = DataSet(
                 trainconfig["train_h5"],
-                trainconfig["batch_size"],
-                noise_center=nc,
-                noise_scale=ns,
-                apply_gausian_filter=gf,
-                sigma_gausian_filter=sgf,
+                nc,
+                ns,
+                gf,
+                sgf,
+                trainconfig["min_start_frame"],
+                trainconfig["max_start_frame"],
+            )
+            dataloader = DataLoader(
+                dataset,
+                batch_size=trainconfig["batch_size"],
+                shuffle=True,
+                num_workers=4,
             )
             # train a model with the given parameters
             model = UNet(1)
@@ -95,19 +103,27 @@ def gridsearch_train(trainconfigpath: str) -> None:
                 lf,
                 modelpath,
                 history_savepath,
-                False
+                False,
             )
-            model.to('cpu')
+            model.to("cpu")
             del model
             # evaluate
-            results_model = evaluate(modelpath,
-                     tmp_folder,
-                     trainconfig['evaluation_img_path'],
-                     trainconfig['batch_size_inference'],
-                     trainconfig['evaluation_roi_folder'],
-                     trainconfig['stimulation_frames'],
-                     trainconfig['response_patience'],
-                     raw_result)
-            with open(os.path.join(modelfolder,f'unet_{lf}-loss_noisescale-{ns}_noisecenter-{nc}_gaussian-{gf}_sigma-{sgf}_performance.json'),'w') as outfile:
-                json.dump(results_model,outfile)
+            results_model = evaluate(
+                modelpath,
+                tmp_folder,
+                trainconfig["evaluation_img_path"],
+                trainconfig["batch_size_inference"],
+                trainconfig["evaluation_roi_folder"],
+                trainconfig["stimulation_frames"],
+                trainconfig["response_patience"],
+                raw_result,
+            )
+            with open(
+                os.path.join(
+                    modelfolder,
+                    f"unet_{lf}-loss_noisescale-{ns}_noisecenter-{nc}_gaussian-{gf}_sigma-{sgf}_performance.json",
+                ),
+                "w",
+            ) as outfile:
+                json.dump(results_model, outfile)
             bar()
