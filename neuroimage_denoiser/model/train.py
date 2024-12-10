@@ -1,17 +1,16 @@
 from neuroimage_denoiser.model.unet import UNet
-from neuroimage_denoiser.utils.dataloader import DataLoader
 from neuroimage_denoiser.utils.plot import plot_train_loss
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 from alive_progress import alive_bar
+from datetime import datetime
 
 
 def train(
     model: UNet,
-    dataloader: DataLoader,
+    dataloader: torch.utils.data.DataLoader,
     num_epochs: int = 1,
     learningrate: float = 0.0001,
     lossfunction: str = "L1",
@@ -25,13 +24,13 @@ def train(
 
     Parameters:
     - model (UNet): U-Net model to be trained.
-    - dataloader (DataLoader): Data loader providing training data.
+    - dataloader (DataLoader): PyTorch DataLoader providing training data.
     - num_epochs (int): Number of training epochs (default is 1).
     - learningrate (float): Learning rate for the optimizer (default is 0.0001).
     - modelpath (str): Filepath to save the trained model (default is "unet.pt").
+    - gpu_num (str): GPU device number to use if available (default is "0").
     - history_savepath (str): Filepath to save the training loss history (default is "train_loss.npy").
-    - example_img_path (str): Path to an example image for periodic model predictions (default is "").
-    - predict_example_every_n_batches (int): Interval for making model predictions using the example image (default is 100).
+    - pbar (bool): Whether to show progress bar during training (default is True).
     """
     lossfunctions = {
         "L1": nn.L1Loss(),
@@ -42,7 +41,7 @@ def train(
     }
     if lossfunction not in lossfunctions.keys():
         raise NotImplementedError(
-            f"The selected loss function ('{lossfunction}) is not available. Select from {list(lossfunctions.keys())}."
+            f"The selected loss function ('{lossfunction}') is not available. Select from {list(lossfunctions.keys())}."
         )
     device = torch.device(f"cuda:{gpu_num}" if torch.cuda.is_available() else "cpu")
     if device == "cpu":
@@ -54,51 +53,42 @@ def train(
     criterion = lossfunctions[lossfunction]
     history = []
     # Training loop
-
-    for _ in range(num_epochs):
-        i = 0
+    for epoch in range(num_epochs):
+        print(f"\nEpoch {epoch + 1}/{num_epochs}")
+        model.train()
         if pbar:
-            with alive_bar(dataloader.__len__()) as bar:
-                while not dataloader.epoch_done:
-                    batch_generated = dataloader.get_batch()
-                    if not batch_generated:
-                        break
-                    data = dataloader.X.to(device)
-                    targets = dataloader.y.to(device)
-                    model.train()
+            with alive_bar(len(dataloader)) as bar:
+                for i, (data, targets) in enumerate(dataloader):
+                    data = data.to(device)
+                    targets = targets.to(device)
                     outputs = model(data)
                     loss = criterion(outputs, targets)
-                    history.append(loss.item())
                     optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
+                    history.append(loss.item())
                     if i % 10 == 0:
                         print(
-                            f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
+                            f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item():.6f}"
                         )
                     bar()
-                    i += 1
         else:
-            while not dataloader.epoch_done:
-                batch_generated = dataloader.get_batch()
-                if not batch_generated:
-                    break
-                data = dataloader.X.to(device)
-                targets = dataloader.y.to(device)
-                model.train()
+            for i, (data, targets) in enumerate(dataloader):
+                data = data.to(device)
+                targets = targets.to(device)
                 outputs = model(data)
                 loss = criterion(outputs, targets)
-                history.append(loss.item())
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+                history.append(loss.item())
                 if i % 10 == 0:
                     print(
-                        f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item()}"
+                        f"Batch {i+1} (samples {(i+1)*dataloader.batch_size}), Loss: {loss.item():.6f}"
                     )
-                i += 1
-        dataloader.shuffle_array()
+    # Save training results
     history = np.array(history)
-    plot_train_loss(history, f"example/train_loss.pdf")
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    plot_train_loss(history, f"{timestamp}_train_loss.pdf")
     np.save(history_savepath, history)
     torch.save(model.state_dict(), modelpath)

@@ -4,9 +4,10 @@ import h5py
 from scipy.ndimage import uniform_filter
 import numpy as np
 import yaml
+from torch.utils.data import DataLoader
 
 from neuroimage_denoiser.utils.trainfiles import TrainFiles
-from neuroimage_denoiser.utils.dataloader import DataLoader
+from neuroimage_denoiser.utils.dataset import DataSet
 from neuroimage_denoiser.model.unet import UNet
 from neuroimage_denoiser.model.train import train
 from neuroimage_denoiser.model.denoise import inference
@@ -195,13 +196,15 @@ def main():
         noise_scale = trainconfig["noise_scale"]
         gausian_filter = trainconfig["gausian_filter"]
         sigma_gausian_filter = trainconfig["sigma_gausian_filter"]
-        dataloader = DataLoader(
+        dataset = DataSet(
             h5,
-            batch_size,
             noise_center,
             noise_scale,
             gausian_filter,
             sigma_gausian_filter,
+        )
+        dataloader = DataLoader(
+            dataset, batch_size=batch_size, shuffle=True, num_workers=4
         )
         model = UNet(1)
         train(

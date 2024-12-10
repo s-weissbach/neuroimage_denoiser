@@ -4,7 +4,8 @@
 *.pt
 # csv files
 *.csv
-# numpy files
+# data
+*.h5
 *.npy
 *.npz
 # nohup files
